@@ -1,4 +1,4 @@
-# Web app guide — Version 3.6
+# Web app guide — Version 3.8
 
 ## iPhone installation
 
@@ -15,6 +15,8 @@ Select 0:30, 1:00, 2:00, or 3:00 independently in each of four penalty blocks. +
 The last ten seconds have countdown beeps. The period ends with a horn; penalties end with three quick beeps. Alert playback depends on browser audio support and an unlocked audio context. Background alerts are not guaranteed.
 
 ## Fields and scores
+
+The quarter-width Reset button above Field restores Team 1–8, clears all four fields’ scores to zero, and selects Field 1 on the current device.
 
 Select Field 1–4. Edit opens a popup for all eight team names. Names and scores are saved separately by field on the current device. Enter scores manually and enter the recipient phone number.
 
