@@ -13,3 +13,5 @@
 - 3.9: moved Reset to the right of the e9 Lacrosse/version label, keeping its quarter-width size and all-field reset behavior.
 
 - 3.10: Game Length now says Quarters / Halves; Game Minutes says Per Quarter / Half. Updated related custom-input labels.
+
+- 3.11: two synthesized loud clap sounds when the game clock crosses 1:00; retained the final-ten-second beeps and ending alerts.
