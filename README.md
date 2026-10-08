@@ -4,11 +4,11 @@ Lacrosse game and penalty timer with final-score reporting.
 
 Live web app: https://resolute-sideline-iphone.truecoot2.chatgpt.site
 
-The current live app is **Version 3.8**, based on the restored Version 3.6. This repository contains the current web source, plus the earlier native Android and iOS projects. The native projects have different feature sets; they are not ports of web Version 3.8.
+The current live app is **Version 3.9**, based on the restored Version 3.6. This repository contains the current web source, plus the earlier native Android and iOS projects. The native projects have different feature sets; they are not ports of web Version 3.9.
 
 ## Contents
 
-- `web/dist/`: web Version 3.8, including logo/icon and horn audio.
+- `web/dist/`: web Version 3.9, including logo/icon and horn audio.
 - `android/`: Android Version 2.5 Java source, manifest, and assets.
 - `ios/`: original SwiftUI project and its installation README.
 - `releases/`: previously built Android APK, when available.
