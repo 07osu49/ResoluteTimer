@@ -1,10 +1,12 @@
-# Web app guide — Version 3.11
+# Web app guide — Version 3.12
 
 ## iPhone installation
 
 Open the live app in Safari and use Share → Add to Home Screen. Launch it from that icon. Keep the app visible and media volume audible for alerts.
 
 ## Game clock
+
+Use − to the left of the time to subtract one second or + to the right to add one second. These work while running or paused; time cannot go below zero. Adjusting an ended clock does not start it automatically.
 
 Choose the number of quarters / halves and minutes per quarter / half, or enter custom values. Start/Pause is the master control for the game and enabled penalties. Reset resets the current period; Previous and Next change the period and reset its clock.
 
