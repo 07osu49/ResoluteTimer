@@ -1,4 +1,4 @@
-# Web app guide — Version 3.12
+# Web app guide — Version 3.13
 
 ## iPhone installation
 
@@ -17,6 +17,8 @@ Select 0:30, 1:00, 2:00, or 3:00 independently in each of four penalty blocks. +
 At 1:00 remaining on the game clock, two loud clap sounds play. The last ten seconds have countdown beeps. The period ends with a horn; penalties end with three quick beeps. Alert playback depends on browser audio support and an unlocked audio context. Background alerts are not guaranteed.
 
 ## Fields and scores
+
+Top labels stay Team 1 and Team 2 in every field. Editable names below them and the score report still use actual team names.
 
 The quarter-width Reset button beside the e9 Lacrosse/version label restores Team 1–8, clears all four fields’ scores to zero, and selects Field 1 on the current device.
 
