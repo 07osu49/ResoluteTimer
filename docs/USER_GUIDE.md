@@ -1,4 +1,4 @@
-# Web app guide — Version 3.10
+# Web app guide — Version 3.11
 
 ## iPhone installation
 
@@ -12,7 +12,7 @@ Choose the number of quarters / halves and minutes per quarter / half, or enter 
 
 Select 0:30, 1:00, 2:00, or 3:00 independently in each of four penalty blocks. +5 adds five seconds. Clear removes that penalty. Newly selected penalties wait until Start All Penalties is pressed. That button arms or pauses all penalties; armed penalties count only while the master game clock is running.
 
-The last ten seconds have countdown beeps. The period ends with a horn; penalties end with three quick beeps. Alert playback depends on browser audio support and an unlocked audio context. Background alerts are not guaranteed.
+At 1:00 remaining on the game clock, two loud clap sounds play. The last ten seconds have countdown beeps. The period ends with a horn; penalties end with three quick beeps. Alert playback depends on browser audio support and an unlocked audio context. Background alerts are not guaranteed.
 
 ## Fields and scores
 
