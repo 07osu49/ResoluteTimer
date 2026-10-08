@@ -1,4 +1,4 @@
-# Web app guide — Version 3.13
+# Web app guide — Version 3.14
 
 ## iPhone installation
 
@@ -20,7 +20,7 @@ At 1:00 remaining on the game clock, two loud clap sounds play. The last ten sec
 
 Top labels stay Team 1 and Team 2 in every field. Editable names below them and the score report still use actual team names.
 
-The quarter-width Reset button beside the e9 Lacrosse/version label restores Team 1–8, clears all four fields’ scores to zero, and selects Field 1 on the current device.
+The quarter-width Reset button beside the e9 Lacrosse/version label resets the whole app on this device: Team 1–8, all scores to zero, Field 1, four eight-minute periods with period 1 paused at 8:00, empty penalties and custom inputs, and a blank phone number. The score text preview refreshes and the reset is saved.
 
 Select Field 1–4. Edit opens a popup for all eight team names. Names and scores are saved separately by field on the current device. Enter scores manually and enter the recipient phone number.
 
