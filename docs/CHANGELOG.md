@@ -15,3 +15,5 @@
 - 3.10: Game Length now says Quarters / Halves; Game Minutes says Per Quarter / Half. Updated related custom-input labels.
 
 - 3.11: two synthesized loud clap sounds when the game clock crosses 1:00; retained the final-ten-second beeps and ending alerts.
+
+- 3.12: minus and plus buttons on either side of the game clock adjust remaining time by one second per tap, clamped at zero.
