@@ -1,0 +1,11 @@
+*.jks
+*.keystore
+.env
+.env.*
+!.env.example
+.DS_Store
+node_modules/
+build/
+DerivedData/
+xcuserdata/
+*.apk.idsig
