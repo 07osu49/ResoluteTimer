@@ -9,3 +9,5 @@
 - October 8, 2026: rolled live app back to 3.6 at the user's request. This package preserves 3.6 as the current web app.
 
 - 3.8: quarter-width Reset button above Field restores Team 1–8, zeros all four fields’ scores, and selects Field 1. Based on the restored 3.6 text format.
+
+- 3.9: moved Reset to the right of the e9 Lacrosse/version label, keeping its quarter-width size and all-field reset behavior.
