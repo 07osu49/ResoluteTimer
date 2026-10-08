@@ -1,4 +1,4 @@
-# Web app guide — Version 3.8
+# Web app guide — Version 3.9
 
 ## iPhone installation
 
@@ -16,7 +16,7 @@ The last ten seconds have countdown beeps. The period ends with a horn; penaltie
 
 ## Fields and scores
 
-The quarter-width Reset button above Field restores Team 1–8, clears all four fields’ scores to zero, and selects Field 1 on the current device.
+The quarter-width Reset button beside the e9 Lacrosse/version label restores Team 1–8, clears all four fields’ scores to zero, and selects Field 1 on the current device.
 
 Select Field 1–4. Edit opens a popup for all eight team names. Names and scores are saved separately by field on the current device. Enter scores manually and enter the recipient phone number.
 
