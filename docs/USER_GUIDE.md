@@ -1,4 +1,4 @@
-# Web app guide — Version 3.9
+# Web app guide — Version 3.10
 
 ## iPhone installation
 
@@ -6,7 +6,7 @@ Open the live app in Safari and use Share → Add to Home Screen. Launch it from
 
 ## Game clock
 
-Choose the number of periods and minutes per period, or enter custom values. Start/Pause is the master control for the game and enabled penalties. Reset resets the current period; Previous and Next change the period and reset its clock.
+Choose the number of quarters / halves and minutes per quarter / half, or enter custom values. Start/Pause is the master control for the game and enabled penalties. Reset resets the current period; Previous and Next change the period and reset its clock.
 
 ## Penalties
 
