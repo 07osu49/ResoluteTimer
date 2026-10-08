@@ -2,7 +2,7 @@
 
 ## Web
 
-Static HTML, CSS, and JavaScript; no dependency install or build step. The restored Version 3.6 source comes from commit `e660649fb3fd7a8b201d219758e71a10326b6838` in the original Site source history.
+Static HTML, CSS, and JavaScript; no dependency install or build step. Current web Version 3.8 builds on the restored 3.6. Site source commit: `0418041fc08c9c597ded83c0dc6c73793c7a70b4`. All-four-field reset behavior and JavaScript syntax were checked.
 
 Local preview:
 
