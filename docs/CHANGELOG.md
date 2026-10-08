@@ -11,3 +11,5 @@
 - 3.8: quarter-width Reset button above Field restores Team 1–8, zeros all four fields’ scores, and selects Field 1. Based on the restored 3.6 text format.
 
 - 3.9: moved Reset to the right of the e9 Lacrosse/version label, keeping its quarter-width size and all-field reset behavior.
+
+- 3.10: Game Length now says Quarters / Halves; Game Minutes says Per Quarter / Half. Updated related custom-input labels.
