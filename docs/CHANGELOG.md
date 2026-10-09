@@ -21,3 +21,5 @@
 - 3.13: fixed top scoreboard labels to Team 1 and Team 2 across all fields and name edits.
 
 - 3.14: Reset now restores game defaults (four eight-minute periods, period 1, paused), clears penalties and custom inputs, removes the phone number, resets all field names/scores, refreshes the report, and persists the reset.
+
+- 3.15: replaced PERIOD above the game clock with GAME LENGTH; current/total count and timer behavior unchanged.
