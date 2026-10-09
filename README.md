@@ -23,3 +23,9 @@ Run `python3 -m http.server 8000 --directory web/dist` and open `http://localhos
 The web app saves team names, scores, settings, and timer state locally on each device. It opens Messages with a draft; sending still requires the user to confirm in Messages.
 
 Signing keys, credentials, device data, and user screenshots are excluded. The logo is a supplied Resolute asset; no ownership or redistribution license is granted by this repository.
+
+## Galaxy Watch7 and Watch Ultra
+
+The standalone Wear OS app is in `watch/`. It includes game and penalty timers, sound/vibration alerts, and on-watch scores. It does not sync with the web/phone app or send SMS.
+
+See [watch installation instructions](watch/INSTALL.md). The [watch build workflow](https://github.com/07osu49/ResoluteTimer/actions/workflows/build-watch.yml) runs unit tests and creates the debug-signed APK artifact. Physical watch testing is still required; keep the app open for alerts.
