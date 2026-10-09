@@ -1,0 +1,45 @@
+name: Build Resolute Android Phone APK
+on:
+  push:
+    branches: [main]
+    paths: ['android-phone/**', 'web/dist/**', '.github/workflows/build-android-phone.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;34.0.0'
+      - name: Bundle version 3.16 and build phone APK
+        working-directory: android-phone
+        run: |
+          python3 prepare_assets.py
+          gradle --no-daemon :app:assembleDebug :app:lintDebug
+      - name: Verify phone package and signature
+        run: |
+          APK=android-phone/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "$APK"
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose "$APK"
+          mkdir -p phone-delivery
+          cp "$APK" phone-delivery/ResoluteTimer-Android-3.16.apk
+          cp android-phone/README.md phone-delivery/README.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ResoluteTimer-Android-3.16
+          path: phone-delivery/
+          retention-days: 90

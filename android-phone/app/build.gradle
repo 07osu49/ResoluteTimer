@@ -1,0 +1,7 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.e9.resolutetimer'
+    compileSdk 35
+    defaultConfig { applicationId 'com.e9.resolutetimer'; minSdk 26; targetSdk 35; versionCode 316; versionName '3.16' }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+}
