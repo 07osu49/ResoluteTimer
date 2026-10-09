@@ -23,3 +23,5 @@
 - 3.14: Reset now restores game defaults (four eight-minute periods, period 1, paused), clears penalties and custom inputs, removes the phone number, resets all field names/scores, refreshes the report, and persists the reset.
 
 - 3.15: replaced PERIOD above the game clock with GAME LENGTH; current/total count and timer behavior unchanged.
+
+- 3.16: changed label above the timer from GAME LENGTH to GAME CLOCK, preserving the current/total count.
