@@ -63,14 +63,14 @@ public class MainActivity extends Activity {
     private void row(Button... buttons){LinearLayout r=new LinearLayout(this);r.setGravity(Gravity.CENTER);for(Button b:buttons){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1);p.setMargins(dp(2),dp(3),dp(2),dp(3));r.addView(b,p);}root.addView(r);}
     private void build(int screen){
         page=screen;clock=phase=status=null;master=arm=null;for(int i=0;i<4;i++){penaltyTime[i]=null;penaltyState[i]=null;}
-        scroll=new ScrollView(this);scroll.setBackgroundColor(Color.BLACK);scroll.setFillViewport(true);root=vertical();root.setPadding(dp(24),dp(36),dp(24),dp(44));scroll.addView(root);setContentView(scroll);
+        scroll=new ScrollView(this);scroll.setBackgroundColor(Color.BLACK);scroll.setFillViewport(true);root=vertical();root.setPadding(dp(18),dp(36),dp(18),dp(44));scroll.addView(root);setContentView(scroll);
         label("RESOLUTE");
         row(button("Game",page==0,()->build(0)),button("Penalties",page==1,()->build(1)));
         if(page==0){
-            phase=text("",18);root.addView(phase);
+            phase=text("",16);root.addView(phase);
             LinearLayout r=new LinearLayout(this);r.setGravity(Gravity.CENTER);
             Button minus=button("−",false,()->timer.adjust(-1000)),plus=button("+",false,()->timer.adjust(1000));
-            r.addView(minus,new LinearLayout.LayoutParams(dp(40),dp(48)));clock=text("",36);clock.setFontFeatureSettings("tnum");r.addView(clock,new LinearLayout.LayoutParams(0,dp(70),1));r.addView(plus,new LinearLayout.LayoutParams(dp(40),dp(48)));root.addView(r);
+            r.addView(minus,new LinearLayout.LayoutParams(dp(32),dp(48)));clock=text("",28);clock.setFontFeatureSettings("tnum");clock.setSingleLine();clock.setAutoSizeTextTypeUniformWithConfiguration(16,28,1,android.util.TypedValue.COMPLEX_UNIT_SP);r.addView(clock,new LinearLayout.LayoutParams(0,dp(70),1));r.addView(plus,new LinearLayout.LayoutParams(dp(32),dp(48)));root.addView(r);
             master=button("",true,()->timer.toggleGame());row(master);
             status=text("",12);root.addView(status);
             row(button("Previous",false,()->timer.next(-1)),button("Next",false,()->timer.next(1)));
