@@ -27,7 +27,7 @@ jobs:
         run: sdkmanager 'platforms;android-35' 'build-tools;34.0.0'
       - name: Check time slots
         run: node android-phone/test-time-slots.cjs
-      - name: Bundle version 3.19 and build phone APK
+      - name: Bundle version 3.20 and build phone APK
         working-directory: android-phone
         run: |
           python3 prepare_assets.py
@@ -38,10 +38,10 @@ jobs:
           "$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "$APK"
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose "$APK"
           mkdir -p phone-delivery
-          cp "$APK" phone-delivery/ResoluteTimer-Android-3.19.apk
+          cp "$APK" phone-delivery/ResoluteTimer-Android-3.20.apk
           cp android-phone/README.md phone-delivery/README.md
       - uses: actions/upload-artifact@v4
         with:
-          name: ResoluteTimer-Android-3.19
+          name: ResoluteTimer-Android-3.20
           path: phone-delivery/
           retention-days: 90
