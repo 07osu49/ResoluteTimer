@@ -1,6 +1,6 @@
 # Install on Galaxy Watch Ultra or Watch7 using your Android phone
 
-The phone APK 3.22 contains the independent Watch 1.0 APK. No computer is required for this route, but a separate phone installer and Wi-Fi pairing are required. Galaxy Wearable does not perform this installation. The app does not attempt silent installation or collect pairing codes.
+The phone APK 3.23 contains the independent Watch 1.0 APK. No computer is required for this route, but a separate phone installer and Wi-Fi pairing are required. Galaxy Wearable does not perform this installation. The app does not attempt silent installation or collect pairing codes.
 
 1. Install `ResoluteTimer-Android-3.22.apk` on your Android phone. Allow installation from the specific browser or file app only when prompted. Open Resolute Sideline Control.
 2. Scroll to **GALAXY WATCH SETUP** at the bottom. Tap **Save Watch APK**. Choose your phone's local **Downloads** folder and save `ResoluteTimer-Watch-1.0.apk`. Do not try to install that watch APK on the phone.
@@ -14,7 +14,7 @@ The phone APK 3.22 contains the independent Watch 1.0 APK. No computer is requir
 
 ## What is included
 
-- Phone 3.22: existing 3.21 timer, slots, score text and side-switch icon, plus watch export/help controls.
+- Phone 3.22: five-slot timer, slots, score text and side-switch icon, plus watch export/help controls.
 - Watch 1.0: independent game timer, four penalty timers, four field score records, editable names and sound/vibration alerts.
 - Watch 1.0 does not include phone synchronization, SMS, time slots or the phone's latest visual changes. Installing the APK does not sync data.
 - Keep the watch app open for alerts; background alert delivery is not implemented. Audible alerts depend on media volume and watch settings.

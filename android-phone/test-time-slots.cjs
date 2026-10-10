@@ -23,7 +23,7 @@ function setup(storage){
 const storage=new Map([['resolute-field-score-1',JSON.stringify({team1:'Original A',team2:'Original B',score1:'16',score2:'9'})]]);
 let t=setup(storage),n=t.nodes;
 assert.equal(n.get('team1').value,'Original A');
-assert.equal(n.get('time-slots').children.length,4);
+assert.equal(n.get('time-slots').children.length,5);
 assert.equal(t.run('timeLabel(schedule[0].time)'),'10 AM');
 assert.equal(t.run('timeLabel(schedule[3].time)'),'1 PM');
 const originalSchedule=t.run('JSON.stringify(schedule)'),originalMessage=t.run('message()');
@@ -45,4 +45,11 @@ n.get('time-slots').children[1].onclick();assert.equal(n.get('score1').value,'98
 t=setup(storage);n=t.nodes;assert.equal(n.get('score-grid')['data-swapped'],'true');assert.equal(n.get('team1').value,'Slot 2 A');assert.equal(n.get('score1').value,'98');
 n.get('edit-fields').onclick();n.get('edit-field-1-team-1').value=' ';n.get('edit-time-slots').children[0].onclick();assert.equal(t.run('editSlot'),1);n.get('cancel-edit').onclick();
 n.get('phone').value='2025550123';n.get('reset-fields').onclick();assert.equal(n.get('score-grid')['data-swapped'],'false');assert.equal(n.get('phone').value,'');assert.equal(t.run('slot'),0);assert.equal(t.run('schedule[1].time'),'11:00');assert.equal(n.get('team1').value,'Team 1');assert.equal(n.get('score1').value,'0');
-console.log('PASS: four default slots, legacy migration, independent teams/scores, editable time, no slot-name field, SMS game time, tab drafts, Cancel, Save, validation, reload, complete reset, visual-only side switching, unchanged data/SMS, side preference reload');
+const oldSchedule=JSON.parse(JSON.stringify(t.run('defaultSchedule()'))).slice(0,4);oldSchedule[3].time='13:30';oldSchedule[3].fields[2]={team1:'Saved A',team2:'Saved B',score1:'15',score2:'98'};
+const migrated=setup(new Map([['resolute-schedule-v1',JSON.stringify(oldSchedule)],['resolute-slot','3']]));
+assert.equal(migrated.run('schedule.length'),5);assert.equal(migrated.run('JSON.stringify(schedule.slice(0,4))'),JSON.stringify(oldSchedule));assert.equal(migrated.run('slot'),3);assert.equal(migrated.run('schedule[4].time'),'14:00');
+const m=migrated.nodes;m.get('edit-fields').onclick();assert.equal(m.get('edit-time-slots').children.length,5);m.get('edit-time-slots').children[4].onclick();m.get('slot-time').value='14:30';m.get('edit-field-1-team-1').value='Fifth Team';m.get('edit-form').onsubmit({preventDefault(){}});
+assert.equal(migrated.run('slot'),4);assert.equal(m.get('team1').value,'Fifth Team');m.get('score1').value='7';migrated.run('saveField()');assert.match(migrated.run('message()'),/Game Time: 2:30 PM\nFifth Team: 7/);
+m.get('time-slots').children[0].onclick();assert.equal(m.get('score1').value,'0');m.get('time-slots').children[4].onclick();assert.equal(m.get('score1').value,'7');
+m.get('reset-fields').onclick();assert.equal(migrated.run('schedule.length'),5);assert.equal(migrated.run('schedule[4].time'),'14:00');assert.equal(migrated.run('schedule[4].fields[0].score1'),'0');
+console.log('PASS: five default slots, legacy migration, independent teams/scores, editable time, no slot-name field, SMS game time, tab drafts, Cancel, Save, validation, reload, complete reset, visual-only side switching, unchanged data/SMS, side preference reload, four-slot migration, fifth-slot edits/scores/SMS/reset');
