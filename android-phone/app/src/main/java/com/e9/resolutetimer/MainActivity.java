@@ -56,8 +56,8 @@ public final class MainActivity extends Activity {
                 String name=uri.getPath();
                 if(name==null||!name.startsWith("/assets/"))return missing();
                 name=name.substring(8);
-                if(!java.util.Arrays.asList("index.html","app.js","horn.wav","icon.png","manifest.webmanifest").contains(name))return missing();
-                String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":"application/manifest+json";
+                if(!java.util.Arrays.asList("index.html","app.js","horn.wav","icon.png","e9-logo.jpg","manifest.webmanifest").contains(name))return missing();
+                String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":name.endsWith(".jpg")?"image/jpeg":"application/manifest+json";
                 try{return new WebResourceResponse(mime,"UTF-8",getAssets().open("web/"+name));}catch(IOException e){return missing();}
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){return navigate(request.getUrl());}
