@@ -1,6 +1,7 @@
 package com.e9.resolutetimer;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
@@ -19,11 +20,14 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collections;
 
-/** Offline Android package of the version 3.16 interface and timer logic. */
+/** Offline phone timer with a user-exportable standalone Wear OS APK. */
 public final class MainActivity extends Activity {
     private static final String HOST="appassets.androidplatform.net";
+    private static final int SAVE_WATCH=42;
     private WebView web;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -60,7 +64,10 @@ public final class MainActivity extends Activity {
                 String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":name.endsWith(".jpg")?"image/jpeg":"application/manifest+json";
                 try{return new WebResourceResponse(mime,"UTF-8",getAssets().open("web/"+name));}catch(IOException e){return missing();}
             }
-            @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){return navigate(request.getUrl());}
+            @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){
+                if(!request.isForMainFrame())return true;
+                return navigate(request.getUrl());
+            }
         });
         frame.addView(web,new FrameLayout.LayoutParams(-1,-1));
         setContentView(frame);
@@ -70,6 +77,11 @@ public final class MainActivity extends Activity {
     private WebResourceResponse missing(){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
     private boolean navigate(Uri uri){
         if("https".equals(uri.getScheme())&&HOST.equals(uri.getHost()))return false;
+        if("resolute-watch".equals(uri.getScheme())){
+            if("save".equals(uri.getHost()))saveWatch();
+            else if("help".equals(uri.getHost()))watchHelp();
+            return true;
+        }
         if("sms".equals(uri.getScheme())){
             String value=uri.getEncodedSchemeSpecificPart();
             int separator=value.indexOf("&body=");
@@ -81,6 +93,40 @@ public final class MainActivity extends Activity {
             try{startActivity(draft);}catch(ActivityNotFoundException e){Toast.makeText(this,"Install or enable a text messaging app to send scores.",Toast.LENGTH_LONG).show();}
         }
         return true;
+    }
+    private void saveWatch(){
+        Intent picker=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        picker.addCategory(Intent.CATEGORY_OPENABLE);
+        picker.setType("application/vnd.android.package-archive");
+        picker.putExtra(Intent.EXTRA_TITLE,"ResoluteTimer-Watch-1.0.apk");
+        try{startActivityForResult(picker,SAVE_WATCH);}
+        catch(ActivityNotFoundException e){Toast.makeText(this,"Enable a Files app to save the watch APK.",Toast.LENGTH_LONG).show();}
+    }
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+        if(requestCode!=SAVE_WATCH||resultCode!=RESULT_OK||data==null||data.getData()==null)return;
+        Uri destination=data.getData();
+        new Thread(()->{
+            String result;
+            try(InputStream input=getAssets().open("watch/ResoluteTimer-Watch-1.0.apk");
+                OutputStream output=getContentResolver().openOutputStream(destination,"wt")){
+                if(output==null)throw new IOException("No output stream");
+                byte[] buffer=new byte[8192];int count;
+                while((count=input.read(buffer))!=-1)output.write(buffer,0,count);
+                output.flush();
+                result="Watch APK saved. Open Wear Installer 2 on your phone to install it over Wi-Fi.";
+            }catch(IOException|SecurityException e){result="Could not save the watch APK. Choose a local Downloads folder and try again.";}
+            final String message=result;
+            runOnUiThread(()->{if(!isFinishing()&&!isDestroyed())Toast.makeText(this,message,Toast.LENGTH_LONG).show();});
+        },"save-watch-apk").start();
+    }
+    private void watchHelp(){
+        new AlertDialog.Builder(this).setTitle("Install on Watch Ultra / Watch7")
+            .setMessage("1. Tap Save Watch APK and choose Downloads on this phone.\n\n2. Install Wear Installer 2 by Malcolm Bryant from Google Play on the phone.\n\n3. Connect phone and watch to the same private Wi-Fi. On the watch, enable Developer options by tapping Software version seven times in About watch > Software information.\n\n4. Enable ADB debugging and Wireless debugging. In Wireless debugging, choose Pair new device. Use its pairing IP, port and code in Wear Installer 2. Then use the connection IP and port from the main Wireless debugging screen (a different port).\n\n5. Select ResoluteTimer-Watch-1.0.apk from Downloads in Wear Installer 2 and install. Disable debugging on the watch afterward.\n\nThe watch app is version 1.0: game/penalty timers and field scores. No phone sync, SMS or time slots. Keep it open for alerts. Hardware installation and alerts still need testing.")
+            .setPositiveButton("Get Wear Installer 2",(dialog,which)->{
+                try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://play.google.com/store/apps/details?id=org.freepoc.wearinstaller2")));}
+                catch(ActivityNotFoundException e){Toast.makeText(this,"Open Google Play and search for Wear Installer 2 by Malcolm Bryant.",Toast.LENGTH_LONG).show();}
+            }).setNegativeButton("Close",null).show();
     }
     @Override public void onBackPressed(){web.evaluateJavascript("(()=>{const d=document.getElementById('edit-dialog');if(d?.open){d.close();return true;}return false;})()",closed->{if(!"true".equals(closed))super.onBackPressed();});}
     @Override protected void onPause(){web.evaluateJavascript("window.dispatchEvent(new Event('pagehide'));",null);web.onPause();super.onPause();}
