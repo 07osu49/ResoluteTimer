@@ -7,7 +7,7 @@ phone,watch=map(Path,sys.argv[1:])
 with zipfile.ZipFile(phone) as archive:
     assert archive.read('assets/watch/ResoluteTimer-Watch-1.0.apk')==watch.read_bytes()
     html=archive.read('assets/web/index.html').decode()
-    assert 'Version 3.27 · Android' in html
+    assert 'Version 3.28 · Android' in html
     assert html.count("location.href='resolute-watch://save'")==1
     assert html.count("location.href='resolute-watch://help'")==1
     assert 'No timer sync.' in html
