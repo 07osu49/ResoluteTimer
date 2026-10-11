@@ -4,10 +4,10 @@ const section=source.slice(source.indexOf('let field=1;'),source.indexOf("$('#fi
 function setup(storage){
  const nodes=new Map();
  class Element{
-  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.textContent='';this.valid=true;this.options=Array.from({length:4},()=>({}));}
+  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.textContent='';this.valid=true;this.style={};this.options=Array.from({length:4},()=>({}));}
   set id(v){this._id=v;nodes.set(v,this)} get id(){return this._id}
   append(...v){this.children.push(...v)} replaceChildren(){this.children=[]}
-  before(){} after(){} closest(){return new Element()}
+  insertBefore(child,before){this.children.splice(this.children.indexOf(before),0,child)} before(){} after(){} closest(){return new Element()}
   querySelector(){return new Element()}
   setAttribute(k,v){this[k]=v} setCustomValidity(v){this.valid=!v}
   reportValidity(){return this.valid&&(!this.required||!!this.value)}
@@ -16,7 +16,7 @@ function setup(storage){
  for(const id of ['score-grid','switch-teams','field','team1','team2','score1','score2','phone','team1-label','team2-label','score1','score2','score-heading','message-title','edit-form','edit-dialog','edit-team-fields','edit-fields','cancel-edit','reset-fields','slot-time','custom-periods','custom-minutes','note']){const e=new Element();e.id=id;}
  for(let i=1;i<=2;i++){nodes.get('team'+i).value='Team '+i;nodes.get('score'+i).value='0'}
  nodes.get('slot-time').required=true;
- const c=vm.createContext({console,state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
+ const c=vm.createContext({console,confirm(){return true},state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
  vm.runInContext(section,c);vm.runInContext(source.slice(source.indexOf('function message(){'),source.indexOf('function render(){')),c);vm.runInContext('loadField()',c);
  return {c,nodes,run:s=>vm.runInContext(s,c)};
 }
@@ -58,4 +58,6 @@ fn.get('edit-fields').onclick();fn.get('edit-field-1-name').value='North Turf';f
 assert.equal(ft.run('fieldName(1)'),'North Turf');assert.match(fn.get('field').options[0].textContent,/^North Turf ·/);assert.match(fn.get('score-heading').textContent,/^North Turf · 10 AM/);assert.match(ft.run('message()'),/^Lacrosse Final Score · North Turf\nGame Time: 10 AM/);assert.equal(ft.run('JSON.stringify(schedule)'),priorData);
 fn.get('time-slots').children[4].onclick();assert.match(fn.get('score-heading').textContent,/^North Turf · 2 PM/);ft=setup(fieldStorage);fn=ft.nodes;assert.equal(ft.run('fieldName(2)'),'South Turf');assert.match(ft.run('message()'),/North Turf/);
 fn.get('edit-fields').onclick();fn.get('edit-field-1-name').value=' ';fn.get('edit-form').onsubmit({preventDefault(){}});assert.equal(ft.run('fieldName(1)'),'North Turf');fn.get('cancel-edit').onclick();fn.get('reset-fields').onclick();assert.equal(ft.run('fieldName(1)'),'Field 1');assert.equal(fieldStorage.has('resolute-field-names'),false);
-console.log('PASS: five default slots, legacy migration, independent teams/scores, editable time, no slot-name field, SMS game time, tab drafts, Cancel, Save, validation, reload, complete reset, visual-only side switching, unchanged data/SMS, side preference reload, four-slot migration, fifth-slot edits/scores/SMS/reset, editable field names/save/cancel/reload/validation/reset, shared names and unchanged team data');
+const testStore=new Map([['resolute-schedule-v1',JSON.stringify(oldSchedule)],['resolute-field-names',JSON.stringify(['North','South','A','B'])],['resolute-slot','3'],['resolute-field','2']]);let pt=setup(testStore),pn=pt.nodes;const beforeTest=pt.run('JSON.stringify({schedule,fieldNames,slot,field})');pn.get('load-test-schedule').onclick();assert.equal(pt.run('schedule.length'),9);assert.equal(pn.get('time-slots').children.length,9);assert.equal(pt.run('schedule[0].time'),'08:30');assert.equal(pt.run('schedule[8].time'),'14:15');assert.equal(pt.run('fieldName(1)'),'East');assert.equal(pt.run('fieldName(3)'),'South');assert.equal(pt.run('schedule[7].fields[2].team1'),'Party');assert.equal(pt.run('schedule[2].fields[1].team2'),'McCord/Perry');assert.equal(pt.run('schedule[4].fields[2].team2'),'St. Charles');assert.equal(pt.run('schedule[6].fields[0].team1'),'Thomas Worthington');assert.match(pt.run('message()'),/Scheduled Activity · East/);
+pn.get('time-slots').children[2].onclick();assert.match(pt.run('message()'),/Game Time: 10 AM\nEast Side All Stars: 0\nWorthington Cardinals: 0/);pt=setup(testStore);pn=pt.nodes;assert.equal(pt.run('schedule.length'),9);assert.equal(pt.run('slot'),2);pn.get('edit-fields').onclick();assert.equal(pn.get('edit-time-slots').children.length,9);pn.get('edit-time-slots').children[8].onclick();pn.get('slot-time').value='14:20';pn.get('edit-form').onsubmit({preventDefault(){}});assert.equal(pt.run('schedule[8].time'),'14:20');pn.get('load-test-schedule').onclick();pn.get('restore-test-schedule').onclick();assert.equal(pt.run('JSON.stringify({schedule,fieldNames,slot,field})'),beforeTest);assert.equal(testStore.has('resolute-test-setup-backup'),false);
+console.log('PASS: five default slots, legacy migration, independent teams/scores, editable time, no slot-name field, SMS game time, tab drafts, Cancel, Save, validation, reload, complete reset, visual-only side switching, unchanged data/SMS, side preference reload, four-slot migration, fifth-slot edits/scores/SMS/reset, editable field names/save/cancel/reload/validation/reset, shared names and unchanged team data, nine-row preset/transcription/reload/edit/original-backup/restore');
