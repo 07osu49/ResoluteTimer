@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../web/dist/app.js'),'utf8');
 const section=source.slice(source.indexOf('const defaultPhone='),source.indexOf("$('#field').onchange="));
-function setup(storage,initialize=false){
+function setup(storage,initialize=false,search=''){
  const nodes=new Map();
  class Element{
   constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.textContent='';this.valid=true;this.style={};this.options=Array.from({length:4},()=>({}));}
@@ -16,7 +16,7 @@ function setup(storage,initialize=false){
  for(const id of ['score-grid','switch-teams','field','team1','team2','score1','score2','phone','team1-label','team2-label','score1','score2','score-heading','message-title','edit-form','edit-dialog','edit-team-fields','edit-fields','cancel-edit','reset-fields','slot-time','custom-periods','custom-minutes','note']){const e=new Element();e.id=id;}
  for(let i=1;i<=2;i++){nodes.get('team'+i).value='Team '+i;nodes.get('score'+i).value='0'}
  nodes.get('slot-time').required=true;
- const c=vm.createContext({console,confirm(){return true},state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
+ const c=vm.createContext({console,URLSearchParams,location:{search},confirm(){return true},state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
  vm.runInContext(section,c);vm.runInContext(source.slice(source.indexOf('function message(){'),source.indexOf('function render(){')),c);if(initialize)vm.runInContext('initializePicturedSchedule()',c);vm.runInContext('loadField()',c);
  return {c,nodes,run:s=>vm.runInContext(s,c)};
 }
@@ -68,3 +68,13 @@ assert.match(html,/<button id="reset-fields" hidden /);
 assert.match(html,/#sideline-preview #reset-fields\{display:none!important\}/);
 assert.doesNotMatch(html,/<button[^>]*id="reset"[^>]*hidden/);
 console.log('Main reset hidden; game-clock reset retained');
+
+const webStorage=new Map([['resolute-picture-loaded-v327','true']]);
+let web=setup(webStorage,true,'?load-schedule=test-20261011');
+assert.equal(web.run('schedule.length'),9);
+assert.equal(web.run('fieldNames[0]'),'East');
+assert.equal(JSON.parse(webStorage.get('resolute-web-schedule-backup')).schedule.length,5);
+web.nodes.get('score1').value='17';web.run('saveField()');
+web=setup(webStorage,true,'?load-schedule=test-20261011');assert.equal(web.nodes.get('score1').value,'17');
+const untouched=setup(new Map([['resolute-picture-loaded-v327','true']]),true);assert.equal(untouched.run('schedule.length'),5);
+console.log('PASS: explicit web link loads schedule once; preserves later edits and other app stores');
