@@ -30,7 +30,7 @@ jobs:
       - name: Test and build embedded watch APK
         working-directory: watch
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
-      - name: Bundle version 3.30 and build phone APK
+      - name: Bundle version 3.31 and build phone APK
         working-directory: android-phone
         run: |
           python3 prepare_assets.py
@@ -45,12 +45,12 @@ jobs:
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose "$WATCH"
           python3 android-phone/verify_watch_bundle.py "$APK" "$WATCH"
           mkdir -p phone-delivery
-          cp "$APK" phone-delivery/ResoluteTimer-Android-3.30.apk
+          cp "$APK" phone-delivery/ResoluteTimer-Android-3.31.apk
           cp "$WATCH" phone-delivery/ResoluteTimer-Watch-1.0.apk
           cp android-phone/WATCH-PHONE-INSTALL.md phone-delivery/WATCH-PHONE-INSTALL.md
           cp android-phone/README.md phone-delivery/README.md
       - uses: actions/upload-artifact@v4
         with:
-          name: ResoluteTimer-Phone-Watch-3.30
+          name: ResoluteTimer-Phone-Watch-3.31
           path: phone-delivery/
           retention-days: 90
