@@ -64,10 +64,10 @@ assert.equal(t.run('savedPhone()'),'+1 (614) 493-8545');storage.set('resolute-ph
 console.log('PASS: five default slots, legacy migration, independent teams/scores, editable time, no slot-name field, SMS game time, tab drafts, Cancel, Save, validation, reload, complete reset, visual-only side switching, unchanged data/SMS, side preference reload, four-slot migration, fifth-slot edits/scores/SMS/reset, editable field names/save/cancel/reload/validation/reset, shared names and unchanged team data, nine-row preset/transcription/reload/edit/automatic load once/removed buttons/retained backup, default phone/reset/preserved custom number');
 
 const html=fs.readFileSync(require('node:path').join(__dirname,'../web/dist/index.html'),'utf8');
-assert.match(html,/<button id="reset-fields" hidden /);
-assert.match(html,/#sideline-preview #reset-fields\{display:none!important\}/);
+assert.match(html,/<button id="reset-fields" type="button" /);
+assert.doesNotMatch(html,/#sideline-preview #reset-fields\{display:none!important\}/);
 assert.doesNotMatch(html,/<button[^>]*id="reset"[^>]*hidden/);
-console.log('Main reset hidden; game-clock reset retained');
+console.log('Main reset visible; game-clock reset retained');
 
 const webStorage=new Map([['resolute-picture-loaded-v327','true']]);
 let web=setup(webStorage,true,'?load-schedule=test-20261011');
