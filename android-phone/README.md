@@ -1,6 +1,6 @@
-# Resolute Sideline Control — Android 3.35 with Watch APK
+# Resolute Sideline Control — Android 3.36 with Watch APK
 
-Regular Android phone/tablet APK with the version 3.35 interface and timer logic bundled offline in Android WebView, plus a Save Watch APK option in version 3.22. Requires Android 8.0+ and an updated Android System WebView. The phone timer does not require watch hardware.
+Regular Android phone/tablet APK with the version 3.36 interface and timer logic bundled offline in Android WebView, plus a Save Watch APK option in version 3.22. Requires Android 8.0+ and an updated Android System WebView. The phone timer does not require watch hardware.
 
 Includes reset of all fields/timers/phone number, fixed Team 1/Team 2 labels, quarters/halves settings, GAME CLOCK label, one-second minus/plus adjustments, one-minute double claps, countdown/horn audio and final-score reporting. Send Text opens the phone's messaging app with a draft; the user sends it there.
 
@@ -8,7 +8,7 @@ Keep the app open during play for alerts. The display stays awake while open. Ba
 
 The new app ID is `com.e9.resolutetimer`; it installs separately from native Android 2.5 and the watch app. It does not import their saved data. This is a debug-signed personal APK, not a Play Store release. Physical phone testing is still needed. Fresh build signing keys may differ, requiring uninstall/reinstall for future updates.
 
-Build: JDK 17, Android SDK 35, Gradle 8.9. First build the watch using `gradle -p ../watch :app:testDebugUnitTest :app:assembleDebug`. Then run `python3 prepare_assets.py` and `gradle :app:assembleDebug`. GitHub Actions builds and verifies both APKs. Download the `ResoluteTimer-Phone-Watch-3.35` artifact and open `ResoluteTimer-Android-3.35.apk` on your phone. Allow installation from the specific browser/file app when Android prompts.
+Build: JDK 17, Android SDK 35, Gradle 8.9. First build the watch using `gradle -p ../watch :app:testDebugUnitTest :app:assembleDebug`. Then run `python3 prepare_assets.py` and `gradle :app:assembleDebug`. GitHub Actions builds and verifies both APKs. Download the `ResoluteTimer-Phone-Watch-3.36` artifact and open `ResoluteTimer-Android-3.36.apk` on your phone. Allow installation from the specific browser/file app when Android prompts.
 
 Version 3.19 adds four time slots (10 AM, 11 AM, noon, 1 PM). Edit lets you customize each slot's time and all four fields' team names. Main time-slot buttons select the corresponding names and scores. Slots are separate and persist locally; existing 3.16 field records are preserved in the first slot. Cancel discards unsaved edits; Reset restores every slot to defaults.
 
@@ -47,3 +47,5 @@ Version 3.33 places a decrease down arrow on the left and an increase up arrow o
 Version 3.34 adds visible gray boxes and borders around the score up/down arrow buttons. Positions, one-point scoring, saved data, and Watch 1.0 are unchanged.
 
 Version 3.35 halves the visible score-arrow boxes in width and height, with proportionally smaller arrow glyphs. The original tap areas and score layout are retained. Saved data and Watch 1.0 are unchanged.
+
+Version 3.36 doubles the visible score-arrow box width from 3.35, retains the same height, and makes arrows bold. Score logic, saved data, and Watch 1.0 are unchanged.
