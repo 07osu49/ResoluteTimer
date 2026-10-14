@@ -106,3 +106,6 @@ for(const side of[1,2]){
 }
 assert(!html.includes('class="score-controls"'));
 console.log('PASS: down arrow left and up arrow right inside both score boxes');
+
+assert.match(html,/#sideline-preview \.score-adjust \.score-arrow\{[^}]*border:1px solid #777;[^}]*border-radius:6px;[^}]*background:#353535;/);
+console.log('PASS: score arrows have visible boxed button styling');
