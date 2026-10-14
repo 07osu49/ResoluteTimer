@@ -13,7 +13,7 @@ function setup(storage,initialize=false,search=''){
   reportValidity(){return this.valid&&(!this.required||!!this.value)}
   showModal(){this.open=true} close(){this.open=false}
  }
- for(const id of ['score-grid','switch-teams','field','team1','team2','score1','score2','phone','team1-label','team2-label','score1','score2','score-heading','message-title','edit-form','edit-dialog','edit-team-fields','edit-fields','cancel-edit','reset-fields','slot-time','custom-periods','custom-minutes','note']){const e=new Element();e.id=id;}
+ for(const id of ['score1-plus','score1-minus','score2-plus','score2-minus','score-grid','switch-teams','field','team1','team2','score1','score2','phone','team1-label','team2-label','score1','score2','score-heading','message-title','edit-form','edit-dialog','edit-team-fields','edit-fields','cancel-edit','reset-fields','slot-time','custom-periods','custom-minutes','note']){const e=new Element();e.id=id;}
  for(let i=1;i<=2;i++){nodes.get('team'+i).value='Team '+i;nodes.get('score'+i).value='0'}
  nodes.get('slot-time').required=true;
  const c=vm.createContext({console,URLSearchParams,location:{search},confirm(){return true},state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
@@ -78,3 +78,22 @@ web.nodes.get('score1').value='17';web.run('saveField()');
 web=setup(webStorage,true,'?load-schedule=test-20261011');assert.equal(web.nodes.get('score1').value,'17');
 const untouched=setup(new Map([['resolute-picture-loaded-v327','true']]),true);assert.equal(untouched.run('schedule.length'),5);
 console.log('PASS: explicit web link loads schedule once; preserves later edits and other app stores');
+
+const adjustStorage=new Map();let adj=setup(adjustStorage),an=adj.nodes;
+an.get('score1-plus').onclick();assert.equal(an.get('score1').value,'1');assert.equal(an.get('score2').value,'0');
+an.get('score2-plus').onclick();an.get('score2-plus').onclick();assert.equal(an.get('score2').value,'2');
+an.get('score1-minus').onclick();an.get('score1-minus').onclick();assert.equal(an.get('score1').value,'0');assert.equal(an.get('score1-minus').disabled,true);
+an.get('score2-minus').onclick();assert.equal(an.get('score2').value,'1');assert.match(adj.run('message()'),/Team 2: 1/);
+an.get('switch-teams').onclick();an.get('score1-plus').onclick();assert.equal(an.get('score1').value,'1');assert.equal(an.get('score2').value,'1');
+adj=setup(adjustStorage);an=adj.nodes;assert.equal(an.get('score1').value,'1');assert.equal(an.get('score2').value,'1');
+an.get('time-slots').children[1].onclick();an.get('score1-plus').onclick();an.get('score1-plus').onclick();assert.equal(an.get('score1').value,'2');
+an.get('time-slots').children[0].onclick();assert.equal(an.get('score1').value,'1');
+adj.run('field=2;loadField()');an.get('score2-plus').onclick();assert.equal(an.get('score2').value,'1');
+adj.run('field=1;loadField()');assert.equal(an.get('score1').value,'1');assert.equal(an.get('score2').value,'1');
+an.get('score1').value='98';adj.run('saveField();updateScoreControls()');an.get('score1-plus').onclick();assert.equal(an.get('score1').value,'99');
+an.get('score1').value='';an.get('score1-minus').onclick();assert.equal(an.get('score1').value,'0');
+adj.run("schedule[slot].fields[field-1].activity=true;updateScoreControls()");
+assert.equal(an.get('score1-plus').disabled,true);assert.equal(an.get('score2-minus').disabled,true);
+an.get('score1-plus').onclick();assert.equal(an.get('score1').value,'0');
+assert.match(html,/class="score-adjust"/);for(const id of['score1-plus','score1-minus','score2-plus','score2-minus'])assert(html.includes('id="'+id+'"'));
+console.log('PASS: independent score +/- buttons, zero floor, swapped sides, SMS, slots, fields, reload, typed values, and activity guard');
