@@ -97,3 +97,12 @@ assert.equal(an.get('score1-plus').disabled,true);assert.equal(an.get('score2-mi
 an.get('score1-plus').onclick();assert.equal(an.get('score1').value,'0');
 assert.match(html,/class="score-adjust"/);for(const id of['score1-plus','score1-minus','score2-plus','score2-minus'])assert(html.includes('id="'+id+'"'));
 console.log('PASS: independent score +/- buttons, zero floor, swapped sides, SMS, slots, fields, reload, typed values, and activity guard');
+
+for(const side of[1,2]){
+ const group=html.match(new RegExp('<div class="score-adjust"[^>]*>([\\s\\S]*?)</div>','g'))[side-1];
+ assert(group.indexOf('id="score'+side+'-minus"')<group.indexOf('id="score'+side+'"'));
+ assert(group.indexOf('id="score'+side+'"')<group.indexOf('id="score'+side+'-plus"'));
+ assert(group.includes('>↓</button>'));assert(group.includes('>↑</button>'));
+}
+assert(!html.includes('class="score-controls"'));
+console.log('PASS: down arrow left and up arrow right inside both score boxes');
