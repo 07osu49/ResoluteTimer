@@ -107,5 +107,8 @@ for(const side of[1,2]){
 assert(!html.includes('class="score-controls"'));
 console.log('PASS: down arrow left and up arrow right inside both score boxes');
 
-assert.match(html,/#sideline-preview \.score-adjust \.score-arrow\{[^}]*border:1px solid #777;[^}]*border-radius:6px;[^}]*background:#353535;/);
+assert.match(html,/#sideline-preview \.score-adjust \.score-arrow::before\{[^}]*width:50%;height:50%;[^}]*border:1px solid #777;[^}]*border-radius:3px;[^}]*background:#353535;/);
 console.log('PASS: score arrows have visible boxed button styling');
+
+assert.match(html,/#sideline-preview \.score-adjust \.score-arrow\{[^}]*min-height:58px;height:58px;[^}]*font-size:13px;/);
+console.log('PASS: visible arrow boxes half width/height; original tap area retained');
