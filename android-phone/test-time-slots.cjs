@@ -107,9 +107,9 @@ for(const side of[1,2]){
 assert(!html.includes('class="score-controls"'));
 console.log('PASS: down arrow left and up arrow right inside both score boxes');
 
-assert.match(html,/#sideline-preview \.score-adjust \.score-arrow\{[^}]*width:44px;min-height:48px;height:48px;[^}]*border-radius:5px;background:#2d2d2d;[^}]*font-size:28px;font-weight:700;/);
+assert.match(html,/#sideline-preview \.score-adjust \.score-arrow\{[^}]*width:44px;min-height:24px;height:24px;[^}]*border-radius:5px;background:#2d2d2d;[^}]*font-size:20px;font-weight:900;/);
 assert(!html.includes('.score-arrow::before'));
-console.log('PASS: score arrows use game-clock-style gray buttons and large symbols');
+console.log('PASS: score arrows use half-height gray buttons with bold symbols');
 
 const manualStore=new Map();let manual=setup(manualStore),mn=manual.nodes;
 mn.get('score1').value='9';manual.run('saveField()');manual.c.confirm=()=>false;mn.get('load-test-schedule').onclick();assert.equal(manual.run('schedule.length'),5);assert.equal(mn.get('score1').value,'9');assert(!manualStore.has('resolute-manual-schedule-backup'));
