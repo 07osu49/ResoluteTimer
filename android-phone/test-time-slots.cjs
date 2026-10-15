@@ -121,7 +121,7 @@ console.log('PASS: visible Load Schedule button, cancel, backup, preset reload, 
 
 const importStore=new Map();let imp=setup(importStore);imp.nodes.get('score1').value='7';imp.run('saveField()');
 const I=require('../web/dist/schedule-import.js'),candidate=I.parseRows([['Time','East'],['10 AM','A v B'],['11 AM','C v D'],['12 PM','E v F'],['1 PM','G v H']]);
-imp.c.candidate=candidate;imp.c.confirm=()=>false;assert.equal(imp.run('applyImportedSchedule(candidate)'),false);assert.equal(imp.run('schedule.length'),5);assert(!importStore.has('resolute-import-backup'));
+imp.c.candidate=candidate;imp.c.confirm=()=>{throw Error('Native confirm must not be called')};assert.equal(imp.run('schedule.length'),5);assert(!importStore.has('resolute-import-backup'));
 imp.c.confirm=()=>true;assert.equal(imp.run('applyImportedSchedule(candidate)'),true);assert.equal(JSON.parse(importStore.get('resolute-import-backup')).schedule[0].fields[0].score1,'7');
 assert.equal(imp.run('schedule.length'),4);imp=setup(importStore,true);assert.equal(imp.run('schedule.length'),4);assert.equal(imp.nodes.get('team1').value,'A');assert.equal(imp.run('fieldNames[0]'),'East');
 const one=I.parseRows([['Time','Field','Team 1','Team 2'],['8 AM','Field A','Home','Away']]);imp.c.candidate=one;imp.run('applyImportedSchedule(candidate)');imp=setup(importStore,true);assert.equal(imp.run('schedule.length'),1);

@@ -23,9 +23,11 @@ class Element{
 const surface=new Element('main'),head=new Element('head');global.document={createElement:t=>new Element(t),head,getElementById:()=>surface};
 function find(predicate,root=surface){if(predicate(root))return root;for(const child of root.children){const result=find(predicate,child);if(result)return result}}
 (async()=>{
- let applied=null;I.open({apply:value=>{applied=value;return true}});const dialog=find(n=>n.id==='import-dialog'),file=find(n=>n.id==='schedule-file');file.files=[{name:'schedule.csv',size:csv.length,text:async()=>csv}];await file.onchange();
+ let applied=null,fail=false;I.open({apply:value=>{if(fail)throw Error('Test storage failure');applied=value;return true}});const dialog=find(n=>n.id==='import-dialog'),file=find(n=>n.id==='schedule-file');file.files=[{name:'schedule.csv',size:csv.length,text:async()=>csv}];await file.onchange();
  const apply=find(n=>n.textContent==='Use Schedule');assert.equal(apply.disabled,false);assert.equal(applied,null);assert.equal(dialog.isOpen,true);
  const text=find(n=>n.id==='import-text');text.value='Time,East\nwrong,A v B';text.oninput();assert.equal(apply.disabled,true);find(n=>n.textContent==='Preview Schedule').onclick();assert.equal(apply.disabled,true);assert.equal(applied,null);
- text.value='Time,East\n10 AM,A v B';text.oninput();find(n=>n.textContent==='Preview Schedule').onclick();assert.equal(apply.disabled,false);apply.onclick();assert.equal(applied.schedule[0].fields[0].team1,'A');assert.equal(dialog.isOpen,false);
- console.log('PASS: import dialog reads CSV, previews without mutation, invalidates edits, blocks invalid time, and applies only on explicit Use Schedule');
+ text.value='Time,East\n10 AM,A v B';text.oninput();find(n=>n.textContent==='Preview Schedule').onclick();assert.equal(apply.disabled,false);apply.onclick();assert.equal(applied,null);assert.equal(apply.textContent,'Confirm Replace');assert.equal(dialog.isOpen,true);apply.onclick();assert.equal(applied.schedule[0].fields[0].team1,'A');assert.equal(dialog.isOpen,false);
+ I.open({});applied=null;find(n=>n.textContent==='Preview Schedule').onclick();apply.onclick();find(n=>n.textContent==='Cancel').onclick();assert.equal(applied,null);assert.equal(apply.textContent,'Use Schedule');assert.equal(dialog.isOpen,false);
+ I.open({});fail=true;apply.onclick();apply.onclick();assert.equal(dialog.isOpen,true);assert.equal(applied,null);assert.match(find(n=>n.id==='import-status').textContent,/Test storage failure/);assert.equal(apply.textContent,'Use Schedule');
+ console.log('PASS: import dialog reads CSV, previews without mutation, invalidates edits, blocks invalid time, applies only after in-screen Confirm Replace, cancels safely and displays apply errors');
 })().catch(e=>{console.error(e);process.exitCode=1});
