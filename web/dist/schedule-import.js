@@ -27,7 +27,7 @@ function parseDelimited(text){
  }
  if(quoted)throw Error('A quoted CSV cell is not closed. Check the file or edit the text below.');
  row.push(value);if(row.some(v=>clean(v)))rows.push(row);
- if(rows.length>501)throw Error('Import at most 500 rows at a time.');
+ if(rows.length>1001)throw Error('Import at most 1000 rows at a time.');
  return rows;
 }
 function toCSV(rows){return rows.map(row=>row.map(v=>'"'+clean(v).replace(/"/g,'""')+'"').join(',')).join('\n')}
@@ -51,17 +51,17 @@ function parseRows(input){
  const s1=keys.findIndex(v=>['score1','homescore'].includes(v)),s2=keys.findIndex(v=>['score2','awayscore'].includes(v));
  const long=fi>=0&&(a>=0||mi>=0),names=[],slots=new Map(),occupied=new Set();
  const wide=long?[]:headers.map((h,i)=>({h,i})).filter(x=>x.i!==ti&&x.h&&!['date','day','notes','note'].includes(key(x.h)));
- if(!long&&(!wide.length||wide.length>4))throw Error('A wide schedule must have Time plus 1–4 field columns.');
+ if(!long&&(!wide.length||wide.length>10))throw Error('A wide schedule must have Time plus 1–10 field columns.');
  if(!long)wide.forEach(x=>names.push(named(x.h,'Field name')));
  if(new Set(names.map(key)).size!==names.length)throw Error('Field names must be unique.');
  let count=0;
  for(let ri=headerIndex+1;ri<rows.length;ri++){
   const row=rows[ri];if(row.map(key).join('|')===keys.join('|'))continue;
   const time=timeValue(row[ti]);if(!time)throw Error('Row '+(ri+1)+': use a time such as 10:00 AM or 13:00.');
-  let slot=slots.get(time);if(!slot){if(slots.size>=LIMIT)throw Error('Import at most 100 time slots.');slot={name:'',time,fields:Array.from({length:4},blank)};slots.set(time,slot)}
+  let slot=slots.get(time);if(!slot){if(slots.size>=LIMIT)throw Error('Import at most 100 time slots.');slot={name:'',time,fields:Array.from({length:10},blank)};slots.set(time,slot)}
   if(long){
    const fieldName=named(row[fi],'Field name');let index=names.findIndex(n=>key(n)===key(fieldName));
-   if(index<0){if(names.length===4)throw Error('Sideline Control supports up to four fields.');index=names.push(fieldName)-1}
+   if(index<0){if(names.length===10)throw Error('Sideline Control supports up to ten fields.');index=names.push(fieldName)-1}
    const id=time+'|'+index;if(occupied.has(id))throw Error('Duplicate game at '+time+' on '+fieldName+'.');occupied.add(id);
    if(a>=0){const t1=clean(row[a]),t2=b>=0?clean(row[b]):'';slot.fields[index]=t1?{team1:named(t1,'Team 1'),team2:t2?named(t2,'Team 2'):'—',score1:score(s1>=0?row[s1]:''),score2:score(s2>=0?row[s2]:''),...(!t2?{activity:true}:{})}:blank()}
    else slot.fields[index]=matchup(row[mi]);
@@ -72,7 +72,7 @@ function parseRows(input){
  }
  if(!slots.size)throw Error('No games found below the header row.');
  const usedFields=names.length;while(names.length<4){let n='Unused '+(names.length+1);while(names.includes(n))n+=' ';names.push(n)}
- return{schedule:[...slots.values()].sort((a,b)=>a.time.localeCompare(b.time)),fieldNames:names,usedFields,count};
+ return{schedule:[...slots.values()].map(s=>({...s,fields:s.fields.slice(0,names.length)})).sort((a,b)=>a.time.localeCompare(b.time)),fieldNames:names,usedFields,count};
 }
 function ocrRows(data){
  const words=[];for(const block of data.blocks||[])for(const p of block.paragraphs||[])for(const l of p.lines||[])for(const w of l.words||[])if(clean(w.text)&&w.bbox)words.push(w);
@@ -83,7 +83,7 @@ function ocrRows(data){
  const header=lines.find(l=>l.words.some(w=>['time','starttime'].includes(key(w.text))));
  if(!header)throw Error('Could not find the Time header. Include the column headings in the photo.');
  const heads=[];for(const w of header.words){if(/^\d+$/.test(w.text)&&heads.length)heads[heads.length-1].name+=' '+w.text;else heads.push({name:clean(w.text),x:w.bbox.x0})}
- if(heads.length<2||heads.length>5)throw Error('Could not identify 1–4 field columns. Crop to the schedule table and try again.');
+ if(heads.length<2||heads.length>11)throw Error('Could not identify 1–10 field columns. Crop to the schedule table and try again.');
  const result=[heads.map(h=>h.name)];
  for(const line of lines.filter(l=>l.y>header.y+tolerance)){
   const cells=heads.map(()=>[]);
@@ -124,7 +124,7 @@ function open(options){
  const sheetLabel=node('label','Excel worksheet',dialog),sheet=node('select',null,dialog);sheet.id='import-sheet';sheetLabel.htmlFor=sheet.id;sheetLabel.hidden=sheet.hidden=true;
  const status=node('p','',dialog);status.id='import-status';status.setAttribute('role','status');
  const textLabel=node('label','Review or correct the extracted CSV text',dialog),text=node('textarea',null,dialog);text.id='import-text';textLabel.htmlFor=text.id;text.rows=8;text.spellcheck=false;text.placeholder='Time,East,West,South\n10:00 AM,Team A v Team B,Team C v Team D,Training';
- node('p','Use AM/PM or 24-hour times. Photos may misread names or columns: check every row. Up to 100 time slots and four fields.',dialog);
+ node('p','Use AM/PM or 24-hour times. Photos may misread names or columns: check every row. Up to 100 time slots and ten fields.',dialog);
  const previewButton=node('button','Preview Schedule',dialog);previewButton.type='button';
  const preview=node('div',null,dialog);preview.className='import-preview';
  const actions=node('div',null,dialog);actions.className='dialog-actions';const cancel=node('button','Cancel',actions),apply=node('button','Use Schedule',actions);cancel.type=apply.type='button';apply.disabled=true;
@@ -140,7 +140,7 @@ function open(options){
   busyState(true);draft=null;preview.replaceChildren();text.value='';sheet.hidden=sheetLabel.hidden=true;status.textContent='Reading schedule…';
   try{
    if(/\.(csv|tsv)$/i.test(selected.name)){text.value=await selected.text();build()}
-   else if(/\.(xlsx|xls)$/i.test(selected.name)){const X=await loadScript('vendor/xlsx.full.min.js','XLSX');workbook=X.read(await selected.arrayBuffer(),{type:'array',cellFormula:false,cellHTML:false,cellStyles:false,sheetRows:502});sheet.replaceChildren();for(const name of workbook.SheetNames){const o=node('option',name,sheet);o.value=name}if(!workbook.SheetNames.length)throw Error('This workbook has no worksheets.');sheet.value=workbook.SheetNames[0];sheet.hidden=sheetLabel.hidden=workbook.SheetNames.length<2;worksheet()}
+   else if(/\.(xlsx|xls)$/i.test(selected.name)){const X=await loadScript('vendor/xlsx.full.min.js','XLSX');workbook=X.read(await selected.arrayBuffer(),{type:'array',cellFormula:false,cellHTML:false,cellStyles:false,sheetRows:1002});sheet.replaceChildren();for(const name of workbook.SheetNames){const o=node('option',name,sheet);o.value=name}if(!workbook.SheetNames.length)throw Error('This workbook has no worksheets.');sheet.value=workbook.SheetNames[0];sheet.hidden=sheetLabel.hidden=workbook.SheetNames.length<2;worksheet()}
    else if(selected.type.startsWith('image/')||/\.(png|jpe?g|webp|heic|heif)$/i.test(selected.name)){const rows=await recognizePhoto(selected,msg=>status.textContent=msg);text.value=toCSV(rows);build()}
    else throw Error('Choose CSV, XLSX, XLS, or a photo.');
   }catch(e){status.textContent='Import not applied: '+(e.message||'Unable to read this file. Try CSV or a JPEG/PNG photo.');apply.disabled=true}

@@ -4,7 +4,8 @@ const section=source.slice(source.indexOf('const defaultPhone='),source.indexOf(
 function setup(storage,initialize=false,search=''){
  const nodes=new Map();
  class Element{
-  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.textContent='';this.valid=true;this.style={};this.options=Array.from({length:4},()=>({}));}
+  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.textContent='';this.valid=true;this.style={};}
+  get options(){return this.children}
   set id(v){this._id=v;nodes.set(v,this)} get id(){return this._id}
   append(...v){this.children.push(...v)} replaceChildren(){this.children=[]}
   insertBefore(child,before){this.children.splice(this.children.indexOf(before),0,child)} before(){} after(){} closest(){return new Element()}
@@ -13,7 +14,7 @@ function setup(storage,initialize=false,search=''){
   reportValidity(){return this.valid&&(!this.required||!!this.value)}
   showModal(){this.open=true} close(){this.open=false}
  }
- for(const id of ['score1-plus','score1-minus','score2-plus','score2-minus','score-grid','switch-teams','field','team1','team2','score1','score2','phone','team1-label','team2-label','score1','score2','score-heading','message-title','edit-form','edit-dialog','edit-team-fields','edit-fields','cancel-edit','reset-fields','slot-time','custom-periods','custom-minutes','note']){const e=new Element();e.id=id;}
+ for(const id of ['add-field','field-limit','score1-plus','score1-minus','score2-plus','score2-minus','score-grid','switch-teams','field','team1','team2','score1','score2','phone','team1-label','team2-label','score1','score2','score-heading','message-title','edit-form','edit-dialog','edit-team-fields','edit-fields','cancel-edit','reset-fields','slot-time','custom-periods','custom-minutes','note']){const e=new Element();e.id=id;}
  for(let i=1;i<=2;i++){nodes.get('team'+i).value='Team '+i;nodes.get('score'+i).value='0'}
  nodes.get('slot-time').required=true;
  const c=vm.createContext({console,URLSearchParams,location:{search},confirm(){return true},state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
@@ -125,3 +126,13 @@ imp.c.confirm=()=>true;assert.equal(imp.run('applyImportedSchedule(candidate)'),
 assert.equal(imp.run('schedule.length'),4);imp=setup(importStore,true);assert.equal(imp.run('schedule.length'),4);assert.equal(imp.nodes.get('team1').value,'A');assert.equal(imp.run('fieldNames[0]'),'East');
 const one=I.parseRows([['Time','Field','Team 1','Team 2'],['8 AM','Field A','Home','Away']]);imp.c.candidate=one;imp.run('applyImportedSchedule(candidate)');imp=setup(importStore,true);assert.equal(imp.run('schedule.length'),1);
 console.log('PASS: import apply/cancel/backup and exact 1- or 4-slot persistence without legacy migration or auto-preset overwrite');
+
+const tenStore=new Map([['resolute-picture-loaded-v327','true']]);let tf=setup(tenStore),tn=tf.nodes;
+tn.get('edit-fields').onclick();tn.get('add-field').onclick();assert.equal(tf.run('draftFieldNames.length'),5);assert.equal(tf.run('fieldNames.length'),4);tn.get('cancel-edit').onclick();
+tn.get('edit-fields').onclick();assert.equal(tf.run('draftFieldNames.length'),4);
+for(let i=0;i<6;i++)tn.get('add-field').onclick();assert.equal(tn.get('add-field').disabled,true);tn.get('add-field').onclick();assert.equal(tf.run('draftFieldNames.length'),10);
+tn.get('edit-field-10-name').value='Championship';tn.get('edit-field-10-team-1').value='Finalists A';tn.get('edit-time-slots').children[1].onclick();assert.equal(tn.get('edit-field-10-name').value,'Championship');assert.equal(tn.get('edit-field-10-team-1').value,'Team 19');tn.get('edit-form').onsubmit({preventDefault(){}});
+assert.equal(tf.run('schedule.every(s=>s.fields.length===10)'),true);assert.equal(tn.get('field').options.length,10);tn.get('field').value='10';tf.run("saveField();field=10;localStorage.setItem('resolute-field','10');loadField()");tn.get('time-slots').children[0].onclick();assert.equal(tn.get('team1').value,'Finalists A');tn.get('score1-plus').onclick();assert.match(tf.run('message()'),/Championship[\s\S]*Finalists A: 1/);
+tf=setup(tenStore,true);tn=tf.nodes;assert.equal(tf.run('field'),10);assert.equal(tn.get('field').options.length,10);assert.equal(tn.get('score1').value,'1');tn.get('time-slots').children[1].onclick();assert.equal(tn.get('score1').value,'0');tn.get('reset-fields').onclick();assert.equal(tn.get('field').options.length,4);
+const importedTen=I.parseRows([['Time',...Array.from({length:10},(_,i)=>'F'+i)],['10 AM',...Array(10).fill('A v B')]]);tf.c.candidate=importedTen;tf.run('applyImportedSchedule(candidate)');tf=setup(tenStore,true);assert.equal(tf.nodes.get('field').options.length,10);assert.equal(tf.run('schedule[0].fields[9].team2'),'B');
+console.log('PASS: add field draft/cancel/save, ten-field limit, names across slots, independent scores, selected-field reload, reset and ten-field import persistence');
