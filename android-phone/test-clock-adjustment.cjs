@@ -17,4 +17,12 @@ for(const stop of [()=>plus.onpointercancel(e()),()=>plus.onlostpointercapture()
 }
 state.remain=1;minus.onpointerdown(e());tick(600);assert.equal(state.remain,0);assert.equal(state.running,false);minus.onpointerup(e());
 plus.onpointerdown(e());minus.onpointerdown(e({pointerId:2}));tick(500);assert.equal(state.remain,0);minus.onpointerup(e({pointerId:2}));assert.equal(timers.size,0);
+const scores=[3,7];c.scores=scores;
+vm.runInContext("for(const side of[1,2])for(const[direction,delta]of[['plus',1],['minus',-1]])bindHeldAdjustment($('#score'+side+'-'+direction),()=>{scores[side-1]=Math.max(0,scores[side-1]+delta);$('#score'+side+'-'+direction).disabled=delta<0&&scores[side-1]===0})",c);
+const up=buttons['#score1-plus'],down=buttons['#score1-minus'],other=buttons['#score2-plus'];
+up.onpointerdown(e());tick(600);up.onpointerup(e());up.onclick({detail:1});assert.equal(scores[0],7);assert.equal(scores[1],7);
+down.onpointerdown(e());tick(2000);assert.equal(scores[0],0);assert.equal(timers.size,0);down.onpointerup(e());tick(500);assert.equal(scores[0],0);
+other.onkeydown(e({key:' '}));tick(500);other.onkeyup(e({key:' '}));assert.equal(scores[1],10);tick(500);assert.equal(scores[1],10);
+other.onpointerdown(e());win.blur();const saved=scores[1];tick(500);assert.equal(scores[1],saved);
+console.log('PASS: score holds, independent teams, floor, disabled stop, keyboard and blur');
 console.log('PASS: Game Clock tap, hold repeat, release, keyboard, assistive click, cancellation, backgrounding, switch and zero floor');

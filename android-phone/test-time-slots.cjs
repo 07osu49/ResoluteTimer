@@ -17,8 +17,8 @@ function setup(storage,initialize=false,search=''){
  for(const id of ['add-field','field-limit','score1-plus','score1-minus','score2-plus','score2-minus','score-grid','switch-teams','field','team1','team2','score1','score2','phone','team1-label','team2-label','score1','score2','score-heading','message-title','edit-form','edit-dialog','edit-team-fields','edit-fields','cancel-edit','reset-fields','slot-time','custom-periods','custom-minutes','note']){const e=new Element();e.id=id;}
  for(let i=1;i<=2;i++){nodes.get('team'+i).value='Team '+i;nodes.get('score'+i).value='0'}
  nodes.get('slot-time').required=true;
- const c=vm.createContext({console,URLSearchParams,location:{search},confirm(){return true},state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
- vm.runInContext(section,c);vm.runInContext(source.slice(source.indexOf('function message(){'),source.indexOf('function render(){')),c);if(initialize)vm.runInContext('initializePicturedSchedule()',c);vm.runInContext('loadField()',c);
+ const c=vm.createContext({console,URLSearchParams,setTimeout,clearTimeout,setInterval,clearInterval,window:{addEventListener(){}},location:{search},confirm(){return true},state:{},render(){},alert(){},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{addEventListener(){},createElement:t=>new Element(t),head:new Element()},$:s=>nodes.get(s.slice(1))});
+ vm.runInContext(source.slice(source.indexOf('let stopClockAdjustment='),source.indexOf("for(const[id,delta]of[['game-minus'")),c);vm.runInContext(section,c);vm.runInContext(source.slice(source.indexOf('function message(){'),source.indexOf('function render(){')),c);if(initialize)vm.runInContext('initializePicturedSchedule()',c);vm.runInContext('loadField()',c);
  return {c,nodes,run:s=>vm.runInContext(s,c)};
 }
 
