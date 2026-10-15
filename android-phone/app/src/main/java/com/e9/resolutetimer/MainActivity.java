@@ -71,8 +71,8 @@ public final class MainActivity extends Activity {
                 String name=uri.getPath();
                 if(name==null||!name.startsWith("/assets/"))return missing();
                 name=name.substring(8);
-                if(!java.util.Arrays.asList("index.html","app.js","schedule-import.js","IMPORT-LICENSES.txt","horn.wav","icon.png","e9-logo.jpg","manifest.webmanifest","vendor/xlsx.full.min.js","vendor/tesseract.min.js","vendor/worker.min.js","vendor/tesseract-core-lstm.wasm.js","vendor/eng.traineddata","vendor/SHEETJS-LICENSE.txt","vendor/TESSERACT-LICENSE.txt","vendor/TESSERACT-CORE-LICENSE.txt").contains(name))return missing();
-                String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":name.endsWith(".jpg")?"image/jpeg":name.endsWith(".webmanifest")?"application/manifest+json":"application/octet-stream";
+                if(!(name.startsWith("vendor/pdfjs/")&&!name.contains("..")&&name.indexOf(92)<0)&&!java.util.Arrays.asList("index.html","app.js","schedule-import.js","IMPORT-LICENSES.txt","horn.wav","icon.png","e9-logo.jpg","manifest.webmanifest","vendor/xlsx.full.min.js","vendor/tesseract.min.js","vendor/worker.min.js","vendor/tesseract-core-lstm.wasm.js","vendor/eng.traineddata","vendor/SHEETJS-LICENSE.txt","vendor/TESSERACT-LICENSE.txt","vendor/TESSERACT-CORE-LICENSE.txt").contains(name))return missing();
+                String mime=name.endsWith(".html")?"text/html":(name.endsWith(".js")||name.endsWith(".mjs"))?"application/javascript":name.endsWith(".wasm")?"application/wasm":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":name.endsWith(".jpg")?"image/jpeg":name.endsWith(".webmanifest")?"application/manifest+json":"application/octet-stream";
                 try{return new WebResourceResponse(mime,"UTF-8",getAssets().open("web/"+name));}catch(IOException e){return missing();}
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){

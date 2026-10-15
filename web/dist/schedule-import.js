@@ -74,18 +74,19 @@ function parseRows(input){
  const usedFields=names.length;while(names.length<4){let n='Unused '+(names.length+1);while(names.includes(n))n+=' ';names.push(n)}
  return{schedule:[...slots.values()].map(s=>({...s,fields:s.fields.slice(0,names.length)})).sort((a,b)=>a.time.localeCompare(b.time)),fieldNames:names,usedFields,count};
 }
-function ocrRows(data){
+function ocrRows(data,state={}){
  const words=[];for(const block of data.blocks||[])for(const p of block.paragraphs||[])for(const l of p.lines||[])for(const w of l.words||[])if(clean(w.text)&&w.bbox)words.push(w);
  if(!words.length)throw Error('No readable text found. Try a sharper, straight-on photo or use CSV/Excel.');
  const heights=words.map(w=>w.bbox.y1-w.bbox.y0).sort((a,b)=>a-b),tolerance=Math.max(4,heights[Math.floor(heights.length/2)]*.65);
  const lines=[];for(const w of words.sort((a,b)=>(a.bbox.y0+a.bbox.y1)-(b.bbox.y0+b.bbox.y1))){const y=(w.bbox.y0+w.bbox.y1)/2;let line=lines.find(l=>Math.abs(l.y-y)<=tolerance);if(!line){line={y,words:[]};lines.push(line)}line.words.push(w)}
  for(const l of lines)l.words.sort((a,b)=>a.bbox.x0-b.bbox.x0);
  const header=lines.find(l=>l.words.some(w=>['time','starttime'].includes(key(w.text))));
- if(!header)throw Error('Could not find the Time header. Include the column headings in the photo.');
- const heads=[];for(const w of header.words){if(/^\d+$/.test(w.text)&&heads.length)heads[heads.length-1].name+=' '+w.text;else heads.push({name:clean(w.text),x:w.bbox.x0})}
+ if(!header&&!state.columns)throw Error('Could not find the Time header. Include the column headings in the photo or PDF.');
+ const heads=header?[]:state.columns;for(const w of header?.words||[]){if(/^\d+$/.test(w.text)&&heads.length)heads[heads.length-1].name+=' '+w.text;else heads.push({name:clean(w.text),x:w.bbox.x0})}
  if(heads.length<2||heads.length>11)throw Error('Could not identify 1–10 field columns. Crop to the schedule table and try again.');
+ state.columns=heads;
  const result=[heads.map(h=>h.name)];
- for(const line of lines.filter(l=>l.y>header.y+tolerance)){
+ for(const line of lines.filter(l=>l.y>(header?header.y+tolerance:-Infinity))){
   const cells=heads.map(()=>[]);
   for(const w of line.words){let col=0;for(let i=1;i<heads.length;i++)if(w.bbox.x0>=heads[i].x-8)col=i;cells[col].push(w.text)}
   const row=cells.map(c=>c.join(' ').replace(/[|\[\]_]/g,' ').replace(/\s+/g,' ').trim());
@@ -100,27 +101,65 @@ function ocrRows(data){
 const scripts=new Map();
 function loadScript(path,global){if(root[global])return Promise.resolve(root[global]);if(!scripts.has(path))scripts.set(path,new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=new URL(path,document.baseURI).href;s.onload=()=>resolve(root[global]);s.onerror=()=>{scripts.delete(path);s.remove();reject(Error('Could not load the local import tools. Reload the app and try again.'))};document.head.append(s)}));return scripts.get(path)}
 async function recognizePhoto(file,status){
- const T=await loadScript('vendor/tesseract.min.js','Tesseract');
- const image=new Image(),url=URL.createObjectURL(file);let worker;
- try{
+ const image=new Image(),url=URL.createObjectURL(file);try{
   image.src=url;await image.decode();
   const scale=Math.min(2,2200/Math.max(image.naturalWidth,image.naturalHeight));
   const canvas=document.createElement('canvas');canvas.width=Math.round(image.naturalWidth*scale);canvas.height=Math.round(image.naturalHeight*scale);
   const c=canvas.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,canvas.width,canvas.height);c.drawImage(image,0,0,canvas.width,canvas.height);
-  worker=await T.createWorker('eng',1,{workerPath:new URL('vendor/worker.min.js',document.baseURI).href,corePath:new URL('vendor/tesseract-core-lstm.wasm.js',document.baseURI).href,langPath:new URL('vendor',document.baseURI).href,gzip:false,workerBlobURL:false,cacheMethod:'none',logger:m=>status(m.status+(m.progress!=null?' '+Math.round(m.progress*100)+'%':''))});
-  await worker.setParameters({tessedit_pageseg_mode:'3',preserve_interword_spaces:'1'});
-  const result=await worker.recognize(canvas,{}, {text:true,blocks:true});
-  return ocrRows(result.data);
- }finally{URL.revokeObjectURL(url);if(worker)await worker.terminate()}
+  return ocrRows(await ocrCanvas(canvas,status));
+ }finally{URL.revokeObjectURL(url)}
 }
+function pdfTextData(items,viewport){
+ const words=items.filter(i=>clean(i.str)&&i.transform).map(i=>{const p=viewport.convertToViewportPoint(i.transform[4],i.transform[5]),height=Math.max(4,Math.abs(i.height||i.transform[3]||10)*viewport.scale);return{text:clean(i.str),bbox:{x0:p[0],x1:p[0]+Math.abs(i.width||1)*viewport.scale,y0:p[1]-height,y1:p[1]}}});
+ return{blocks:[{paragraphs:[{lines:[{words}]}]}]};
+}
+async function ocrCanvas(canvas,status){
+ const T=await loadScript('vendor/tesseract.min.js','Tesseract');let worker;
+ try{worker=await T.createWorker('eng',1,{workerPath:new URL('vendor/worker.min.js',document.baseURI).href,corePath:new URL('vendor/tesseract-core-lstm.wasm.js',document.baseURI).href,langPath:new URL('vendor',document.baseURI).href,gzip:false,workerBlobURL:false,cacheMethod:'none',logger:m=>status(m.status+(m.progress!=null?' '+Math.round(m.progress*100)+'%':''))});
+ await worker.setParameters({tessedit_pageseg_mode:'3',preserve_interword_spaces:'1'});
+ return(await worker.recognize(canvas,{}, {text:true,blocks:true})).data;
+ }finally{if(worker)await worker.terminate()}
+}
+async function readPDF(file,status){
+ let task,locked=false;
+ try{
+  status('Opening PDF…');
+  const P=root.ResolutePDFJS||await import(new URL('vendor/pdfjs/pdf.min.mjs',document.baseURI).href);
+  P.GlobalWorkerOptions.workerSrc=new URL('vendor/pdfjs/pdf.worker.min.mjs',document.baseURI).href;
+  const assets=new URL('vendor/pdfjs/',document.baseURI).href;
+  task=P.getDocument({data:new Uint8Array(await file.arrayBuffer()),standardFontDataUrl:assets+'standard_fonts/',wasmUrl:assets+'wasm/',isEvalSupported:false,enableXfa:false,maxImageSize:16000000});
+  task.onPassword=()=>{locked=true;void task.destroy()};
+  const pdf=await task.promise;
+  if(pdf.numPages>20)throw Error('Import a PDF with 20 pages or fewer. Split a longer schedule first.');
+  const result=[],columns={};
+  for(let n=1;n<=pdf.numPages;n++){
+   status('Reading PDF page '+n+' of '+pdf.numPages+'…');
+   const page=await pdf.getPage(n),base=page.getViewport({scale:1}),viewport=page.getViewport({scale:Math.min(2,2200/Math.max(base.width,base.height))});
+   let rows;
+   try{const content=await page.getTextContent();rows=ocrRows(pdfTextData(content.items,viewport),columns);parseRows(rows)}
+   catch(textError){
+    status('Recognizing scanned PDF page '+n+' of '+pdf.numPages+'…');
+    const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+    try{await page.render({canvasContext:canvas.getContext('2d'),viewport,background:'rgb(255,255,255)'}).promise;rows=ocrRows(await ocrCanvas(canvas,msg=>status('Page '+n+'/'+pdf.numPages+': '+msg)),columns);parseRows(rows)}
+    catch(e){throw Error('PDF page '+n+': '+(e.message||'Unable to read the schedule table.'))}
+    finally{canvas.width=canvas.height=0}
+   }
+   if(result.length&&rows[0].map(key).join('|')!==result[0].map(key).join('|'))throw Error('PDF page '+n+' has different field columns. Import separate schedules one at a time.');
+   result.push(...(result.length?rows.slice(1):rows));page.cleanup();
+  }
+  parseRows(result);return result;
+ }catch(e){if(locked)throw Error('This PDF is password protected. Import an unlocked copy.');throw e}
+ finally{if(task)await task.destroy()}
+}
+
 let dialog;
 function node(tag,text,parent){const n=document.createElement(tag);if(text!=null)n.textContent=text;if(parent)parent.append(n);return n}
 function open(options){
  if(dialog){dialog.showModal();return}
  dialog=node('dialog');dialog.id='import-dialog';dialog.setAttribute('aria-labelledby','import-title');document.getElementById('sideline-preview').append(dialog);
  const title=node('h2','Import schedule',dialog);title.id='import-title';
- node('p','Choose CSV, Excel (.xlsx/.xls), or a clear photo of a schedule table. Files are processed on this device.',dialog);
- const label=node('label','Schedule file',dialog),file=node('input',null,dialog);file.type='file';file.id='schedule-file';label.htmlFor=file.id;file.accept='.csv,.tsv,.xlsx,.xls,image/*';
+ node('p','Choose CSV, Excel (.xlsx/.xls), PDF (up to 20 pages), or a clear photo of a schedule table. Files are processed on this device.',dialog);
+ const label=node('label','Schedule file',dialog),file=node('input',null,dialog);file.type='file';file.id='schedule-file';label.htmlFor=file.id;file.accept='.csv,.tsv,.xlsx,.xls,.pdf,application/pdf,image/*';
  const sheetLabel=node('label','Excel worksheet',dialog),sheet=node('select',null,dialog);sheet.id='import-sheet';sheetLabel.htmlFor=sheet.id;sheetLabel.hidden=sheet.hidden=true;
  const status=node('p','',dialog);status.id='import-status';status.setAttribute('role','status');
  const textLabel=node('label','Review or correct the extracted CSV text',dialog),text=node('textarea',null,dialog);text.id='import-text';textLabel.htmlFor=text.id;text.rows=8;text.spellcheck=false;text.placeholder='Time,East,West,South\n10:00 AM,Team A v Team B,Team C v Team D,Training';
@@ -141,14 +180,15 @@ function open(options){
   resetConfirmation();busyState(true);draft=null;preview.replaceChildren();text.value='';sheet.hidden=sheetLabel.hidden=true;status.textContent='Reading schedule…';
   try{
    if(/\.(csv|tsv)$/i.test(selected.name)){text.value=await selected.text();build()}
+   else if(selected.type==='application/pdf'||/\.pdf$/i.test(selected.name)){text.value=toCSV(await readPDF(selected,msg=>status.textContent=msg));build()}
    else if(/\.(xlsx|xls)$/i.test(selected.name)){const X=await loadScript('vendor/xlsx.full.min.js','XLSX');workbook=X.read(await selected.arrayBuffer(),{type:'array',cellFormula:false,cellHTML:false,cellStyles:false,sheetRows:1002});sheet.replaceChildren();for(const name of workbook.SheetNames){const o=node('option',name,sheet);o.value=name}if(!workbook.SheetNames.length)throw Error('This workbook has no worksheets.');sheet.value=workbook.SheetNames[0];sheet.hidden=sheetLabel.hidden=workbook.SheetNames.length<2;worksheet()}
    else if(selected.type.startsWith('image/')||/\.(png|jpe?g|webp|heic|heif)$/i.test(selected.name)){const rows=await recognizePhoto(selected,msg=>status.textContent=msg);text.value=toCSV(rows);build()}
-   else throw Error('Choose CSV, XLSX, XLS, or a photo.');
+   else throw Error('Choose CSV, XLSX, XLS, PDF, or a photo.');
   }catch(e){status.textContent='Import not applied: '+(e.message||'Unable to read this file. Try CSV or a JPEG/PNG photo.');apply.disabled=true}
   finally{busyState(false);apply.disabled=!draft;file.value=''}
  };
  dialog.showModal();
 }
-const api={timeValue,parseDelimited,toCSV,parseRows,ocrRows,open};
+const api={timeValue,parseDelimited,toCSV,parseRows,ocrRows,pdfTextData,readPDF,open};
 if(typeof module==='object'&&module.exports)module.exports=api;else root.ResoluteScheduleImport=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

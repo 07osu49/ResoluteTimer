@@ -4,3 +4,5 @@ Schedule import dependencies (bundled locally; no runtime CDN requests):
 - Tesseract.js-core 7.0.0, https://github.com/naptha/tesseract.js-core (Apache-2.0; vendor/TESSERACT-CORE-LICENSE.txt).
 - English traineddata from installed tesseract-ocr tessdata, https://github.com/tesseract-ocr/tessdata (Apache-2.0).
 Photo recognition happens on device. Source photos and spreadsheets are not uploaded by this feature. Review OCR output before applying.
+
+- Mozilla PDF.js 6.4.299 legacy build, https://github.com/mozilla/pdf.js and https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.4.299.tgz (Apache-2.0; vendor/pdfjs/LICENSE.txt). Standard font and image decoder licenses are bundled alongside their assets. PDF processing and scanned-page OCR happen locally; no source file uploads.
