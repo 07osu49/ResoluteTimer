@@ -112,12 +112,13 @@ assert.match(html,/#sideline-preview \.score-adjust \.score-arrow\{[^}]*width:44
 assert(!html.includes('.score-arrow::before'));
 console.log('PASS: score arrows use half-height gray buttons with bold symbols');
 
+assert.match(source,/loadScheduleButton\.textContent='Sample Schedule'/);
 const manualStore=new Map();let manual=setup(manualStore),mn=manual.nodes;
 mn.get('score1').value='9';manual.run('saveField()');manual.c.confirm=()=>false;mn.get('load-test-schedule').onclick();assert.equal(manual.run('schedule.length'),5);assert.equal(mn.get('score1').value,'9');assert(!manualStore.has('resolute-manual-schedule-backup'));
 manual.c.confirm=()=>true;mn.get('load-test-schedule').onclick();assert.equal(manual.run('schedule.length'),9);assert.equal(manual.run('fieldNames[0]'),'East');assert.equal(JSON.parse(manualStore.get('resolute-manual-schedule-backup')).schedule[0].fields[0].score1,'9');
 mn.get('time-slots').children[2].onclick();mn.get('score1-plus').onclick();assert.equal(mn.get('score1').value,'1');manual=setup(manualStore,true);assert.equal(manual.nodes.get('score1').value,'1');assert.equal(manual.run('slot'),2);
 manual.nodes.get('load-test-schedule').onclick();assert.equal(manual.run('slot'),0);assert.equal(manual.run('schedule[2].fields[0].score1'),'0');assert.equal(JSON.parse(manualStore.get('resolute-manual-schedule-backup')).schedule[2].fields[0].score1,'1');
-console.log('PASS: visible Load Schedule button, cancel, backup, preset reload, repeat loading, and saved-score preservation on normal startup');
+console.log('PASS: visible Sample Schedule button, cancel, backup, preset reload, repeat loading, and saved-score preservation on normal startup');
 
 const importStore=new Map();let imp=setup(importStore);imp.nodes.get('score1').value='7';imp.run('saveField()');
 const I=require('../web/dist/schedule-import.js'),candidate=I.parseRows([['Time','East'],['10 AM','A v B'],['11 AM','C v D'],['12 PM','E v F'],['1 PM','G v H']]);
