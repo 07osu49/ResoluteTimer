@@ -117,3 +117,11 @@ manual.c.confirm=()=>true;mn.get('load-test-schedule').onclick();assert.equal(ma
 mn.get('time-slots').children[2].onclick();mn.get('score1-plus').onclick();assert.equal(mn.get('score1').value,'1');manual=setup(manualStore,true);assert.equal(manual.nodes.get('score1').value,'1');assert.equal(manual.run('slot'),2);
 manual.nodes.get('load-test-schedule').onclick();assert.equal(manual.run('slot'),0);assert.equal(manual.run('schedule[2].fields[0].score1'),'0');assert.equal(JSON.parse(manualStore.get('resolute-manual-schedule-backup')).schedule[2].fields[0].score1,'1');
 console.log('PASS: visible Load Schedule button, cancel, backup, preset reload, repeat loading, and saved-score preservation on normal startup');
+
+const importStore=new Map();let imp=setup(importStore);imp.nodes.get('score1').value='7';imp.run('saveField()');
+const I=require('../web/dist/schedule-import.js'),candidate=I.parseRows([['Time','East'],['10 AM','A v B'],['11 AM','C v D'],['12 PM','E v F'],['1 PM','G v H']]);
+imp.c.candidate=candidate;imp.c.confirm=()=>false;assert.equal(imp.run('applyImportedSchedule(candidate)'),false);assert.equal(imp.run('schedule.length'),5);assert(!importStore.has('resolute-import-backup'));
+imp.c.confirm=()=>true;assert.equal(imp.run('applyImportedSchedule(candidate)'),true);assert.equal(JSON.parse(importStore.get('resolute-import-backup')).schedule[0].fields[0].score1,'7');
+assert.equal(imp.run('schedule.length'),4);imp=setup(importStore,true);assert.equal(imp.run('schedule.length'),4);assert.equal(imp.nodes.get('team1').value,'A');assert.equal(imp.run('fieldNames[0]'),'East');
+const one=I.parseRows([['Time','Field','Team 1','Team 2'],['8 AM','Field A','Home','Away']]);imp.c.candidate=one;imp.run('applyImportedSchedule(candidate)');imp=setup(importStore,true);assert.equal(imp.run('schedule.length'),1);
+console.log('PASS: import apply/cancel/backup and exact 1- or 4-slot persistence without legacy migration or auto-preset overwrite');

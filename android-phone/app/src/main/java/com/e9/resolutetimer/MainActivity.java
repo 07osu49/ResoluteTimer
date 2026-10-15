@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -28,6 +29,8 @@ import java.util.Collections;
 public final class MainActivity extends Activity {
     private static final String HOST="appassets.androidplatform.net";
     private static final int SAVE_WATCH=42;
+    private static final int IMPORT_SCHEDULE=43;
+    private ValueCallback<Uri[]> fileSelection;
     private WebView web;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -49,10 +52,18 @@ public final class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        settings.setAllowContentAccess(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(true);
-        web.setWebChromeClient(new WebChromeClient());
+        web.setWebChromeClient(new WebChromeClient(){
+            @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){
+                if(fileSelection!=null)fileSelection.onReceiveValue(null);
+                fileSelection=callback;
+                try{startActivityForResult(params.createIntent(),IMPORT_SCHEDULE);}
+                catch(ActivityNotFoundException e){fileSelection.onReceiveValue(null);fileSelection=null;Toast.makeText(MainActivity.this,"Enable a Files app to import a schedule.",Toast.LENGTH_LONG).show();}
+                return true;
+            }
+        });
         web.setWebViewClient(new WebViewClient(){
             @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest request){
                 Uri uri=request.getUrl();
@@ -60,8 +71,8 @@ public final class MainActivity extends Activity {
                 String name=uri.getPath();
                 if(name==null||!name.startsWith("/assets/"))return missing();
                 name=name.substring(8);
-                if(!java.util.Arrays.asList("index.html","app.js","horn.wav","icon.png","e9-logo.jpg","manifest.webmanifest").contains(name))return missing();
-                String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":name.endsWith(".jpg")?"image/jpeg":"application/manifest+json";
+                if(!java.util.Arrays.asList("index.html","app.js","schedule-import.js","IMPORT-LICENSES.txt","horn.wav","icon.png","e9-logo.jpg","manifest.webmanifest","vendor/xlsx.full.min.js","vendor/tesseract.min.js","vendor/worker.min.js","vendor/tesseract-core-lstm.wasm.js","vendor/eng.traineddata","vendor/SHEETJS-LICENSE.txt","vendor/TESSERACT-LICENSE.txt","vendor/TESSERACT-CORE-LICENSE.txt").contains(name))return missing();
+                String mime=name.endsWith(".html")?"text/html":name.endsWith(".js")?"application/javascript":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":name.endsWith(".jpg")?"image/jpeg":name.endsWith(".webmanifest")?"application/manifest+json":"application/octet-stream";
                 try{return new WebResourceResponse(mime,"UTF-8",getAssets().open("web/"+name));}catch(IOException e){return missing();}
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){
@@ -104,6 +115,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
+        if(requestCode==IMPORT_SCHEDULE){if(fileSelection!=null){fileSelection.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode,data));fileSelection=null;}return;}
         if(requestCode!=SAVE_WATCH||resultCode!=RESULT_OK||data==null||data.getData()==null)return;
         Uri destination=data.getData();
         new Thread(()->{
@@ -128,8 +140,8 @@ public final class MainActivity extends Activity {
                 catch(ActivityNotFoundException e){Toast.makeText(this,"Open Google Play and search for Wear Installer 2 by Malcolm Bryant.",Toast.LENGTH_LONG).show();}
             }).setNegativeButton("Close",null).show();
     }
-    @Override public void onBackPressed(){web.evaluateJavascript("(()=>{const d=document.getElementById('edit-dialog');if(d?.open){d.close();return true;}return false;})()",closed->{if(!"true".equals(closed))super.onBackPressed();});}
+    @Override public void onBackPressed(){web.evaluateJavascript("(()=>{const d=document.querySelector('dialog[open]');if(d?.open){d.close();return true;}return false;})()",closed->{if(!"true".equals(closed))super.onBackPressed();});}
     @Override protected void onPause(){web.evaluateJavascript("window.dispatchEvent(new Event('pagehide'));",null);web.onPause();super.onPause();}
     @Override protected void onResume(){super.onResume();if(web!=null)web.onResume();}
-    @Override protected void onDestroy(){if(web!=null){web.stopLoading();web.destroy();}super.onDestroy();}
+    @Override protected void onDestroy(){if(fileSelection!=null){fileSelection.onReceiveValue(null);fileSelection=null;}if(web!=null){web.stopLoading();web.destroy();}super.onDestroy();}
 }

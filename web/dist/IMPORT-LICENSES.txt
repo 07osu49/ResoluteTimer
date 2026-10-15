@@ -1,0 +1,6 @@
+Schedule import dependencies (bundled locally; no runtime CDN requests):
+- SheetJS Community Edition 0.20.3, https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js (Apache-2.0; vendor/SHEETJS-LICENSE.txt).
+- Tesseract.js 7.0.0, https://github.com/naptha/tesseract.js (Apache-2.0; vendor/TESSERACT-LICENSE.txt).
+- Tesseract.js-core 7.0.0, https://github.com/naptha/tesseract.js-core (Apache-2.0; vendor/TESSERACT-CORE-LICENSE.txt).
+- English traineddata from installed tesseract-ocr tessdata, https://github.com/tesseract-ocr/tessdata (Apache-2.0).
+Photo recognition happens on device. Source photos and spreadsheets are not uploaded by this feature. Review OCR output before applying.
