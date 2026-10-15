@@ -20,7 +20,7 @@ marker='<dialog id="edit-dialog"'
 assert marker in html
 html=html.replace(marker,'''<section style="max-width:520px;margin:12px auto;padding:16px;background:#000;color:#fff;border-radius:12px;font-family:Arial,sans-serif"><h3 style="margin:0 0 12px">GALAXY WATCH SETUP</h3><p style="font-size:14px">Watch 1.0 included · Wi-Fi installation from this phone. No timer sync.</p><button type="button" style="width:100%;min-height:48px;margin-bottom:8px;background:#c62828;color:white;border:0;border-radius:6px;font-size:16px;font-weight:bold" onclick="location.href='resolute-watch://save'">Save Watch APK</button><button type="button" style="width:100%;min-height:48px;background:#2d2d2d;color:white;border:0;border-radius:6px;font-size:16px" onclick="location.href='resolute-watch://help'">Watch Installation Instructions</button></section>'''+marker)
 (target/'index.html').write_text(html)
-for name in ['app.js','schedule-import.js','IMPORT-LICENSES.txt','horn.wav','icon.png','e9-logo.jpg','manifest.webmanifest']:
+for name in ['app.js','schedule-import.js','IMPORT-LICENSES.txt','horn.wav','icon.png','e9-logo.jpg','resolute-logo-transparent.png','manifest.webmanifest']:
     shutil.copyfile(source/name,target/name)
 shutil.copytree(source/'vendor',target/'vendor',dirs_exist_ok=True)
 icons=root/'app'/'src'/'main'/'res'/'drawable'
