@@ -32,7 +32,18 @@ window.addEventListener('blur',()=>stopClockAdjustment());
 window.addEventListener('pagehide',()=>stopClockAdjustment());
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopClockAdjustment()});
 $('#start').onclick=()=>act(()=>{if(!state.running&&state.remain===0)state.remain=state.minutes*60;state.running=!state.running});$('#reset').onclick=()=>act(()=>{state.running=false;state.remain=state.minutes*60});for(const[id,d]of[['prev',-1],['next',1]])$('#'+id).onclick=()=>act(()=>{state.period=Math.min(state.periods,Math.max(1,state.period+d));state.running=false;state.remain=state.minutes*60});$('#all').onclick=()=>act(()=>{const on=!state.armed.some((a,i)=>a&&state.p[i]>0);for(let i=0;i<4;i++)state.armed[i]=on&&state.active[i]&&state.p[i]>0});
-for(const[id,key,max]of[['custom-periods','periods',99],['custom-minutes','minutes',999]])$('#'+id).onchange=()=>{const n=+$('#'+id).value;if(!Number.isInteger(n)||n<1||n>max){$('#'+id).setCustomValidity('Enter 1–'+max);$('#'+id).reportValidity();return}$('#'+id).setCustomValidity('');act(()=>{state[key]=n;if(key==='periods')state.period=Math.min(state.period,n);else{state.remain=n*60;state.running=false}})};
+function applyCustomLength(id,key,max,n){
+  if(!Number.isInteger(n)||n<1||n>max){$('#'+id).setCustomValidity('Enter 1–'+max);$('#'+id).reportValidity();return}
+  $('#'+id).setCustomValidity('');
+  act(()=>{state[key]=n;if(key==='periods')state.period=Math.min(state.period,n);else{state.remain=n*60;state.running=false}});
+}
+for(const[id,key,max]of[['custom-periods','periods',99],['custom-minutes','minutes',999]]){
+  $('#'+id).onchange=()=>applyCustomLength(id,key,max,+$('#'+id).value);
+  for(const[direction,delta]of[['minus',-1],['plus',1]])bindHeldAdjustment($('#'+id+'-'+direction),()=>{
+    const n=Math.min(max,Math.max(1,state[key]+delta));
+    $('#'+id).value=String(n);applyCustomLength(id,key,max,n);
+  });
+}
 const defaultPhone='+1 (614) 493-8545';
 function savedPhone(){try{return localStorage.getItem('resolute-phone')||defaultPhone}catch(e){return defaultPhone}}
 let field=1;try{field=Number(localStorage.getItem('resolute-field'))||1}catch(e){}if(!Number.isInteger(field)||field<1||field>10)field=1;

@@ -26,3 +26,15 @@ other.onkeydown(e({key:' '}));tick(500);other.onkeyup(e({key:' '}));assert.equal
 other.onpointerdown(e());win.blur();const saved=scores[1];tick(500);assert.equal(scores[1],saved);
 console.log('PASS: score holds, independent teams, floor, disabled stop, keyboard and blur');
 console.log('PASS: Game Clock tap, hold repeat, release, keyboard, assistive click, cancellation, backgrounding, switch and zero floor');
+
+const inputs={};c.$=id=>buttons[id]??=( {value:'',setCustomValidity(v){this.validity=v},reportValidity(){}} );
+vm.runInContext(code.slice(code.indexOf('function applyCustomLength('),code.indexOf('const defaultPhone=')),c);
+state.periods=4;state.period=4;state.minutes=8;state.remain=450;state.running=true;
+buttons['#custom-periods-plus'].onpointerdown(e());tick(500);buttons['#custom-periods-plus'].onpointerup(e());assert.equal(state.periods,7);assert.equal(buttons['#custom-periods'].value,'7');
+state.periods=1;buttons['#custom-periods-minus'].onclick();assert.equal(state.periods,1);assert.equal(state.period,1);
+state.periods=99;buttons['#custom-periods-plus'].onclick();assert.equal(state.periods,99);
+buttons['#custom-minutes-plus'].onpointerdown(e());tick(500);buttons['#custom-minutes-plus'].onpointerup(e());assert.equal(state.minutes,11);assert.equal(state.remain,660);assert.equal(state.running,false);
+state.minutes=999;buttons['#custom-minutes-plus'].onclick();assert.equal(state.minutes,999);
+buttons['#custom-minutes'].value='12';buttons['#custom-minutes'].onchange();assert.equal(state.minutes,12);assert.equal(state.remain,720);
+buttons['#custom-minutes'].value='0';buttons['#custom-minutes'].onchange();assert.equal(state.minutes,12);assert.equal(buttons['#custom-minutes'].validity,'Enter 1–999');
+console.log('PASS: custom periods/minutes tap and hold, bounds, period clamp, timer reset and typed validation');
