@@ -1,6 +1,6 @@
-# Resolute Sideline Control — Android 3.47 with Watch APK
+# Resolute Sideline Control — Android 3.48 with Watch APK
 
-Regular Android phone/tablet APK with the version 3.47 interface and timer logic bundled offline in Android WebView, plus a Save Watch APK option in version 3.22. Requires Android 8.0+ and an updated Android System WebView. The phone timer does not require watch hardware.
+Regular Android phone/tablet APK with the version 3.48 interface and timer logic bundled offline in Android WebView, plus a Save Watch APK option in version 3.22. Requires Android 8.0+ and an updated Android System WebView. The phone timer does not require watch hardware.
 
 Includes reset of all fields/timers/phone number, fixed Team 1/Team 2 labels, quarters/halves settings, GAME CLOCK label, one-second minus/plus adjustments, one-minute double claps, countdown/horn audio and final-score reporting. Send Text opens the phone's messaging app with a draft; the user sends it there.
 
@@ -8,7 +8,7 @@ Keep the app open during play for alerts. The display stays awake while open. Ba
 
 The new app ID is `com.e9.resolutetimer`; it installs separately from native Android 2.5 and the watch app. It does not import their saved data. This is a debug-signed personal APK, not a Play Store release. Physical phone testing is still needed. Fresh build signing keys may differ, requiring uninstall/reinstall for future updates.
 
-Build: JDK 17, Android SDK 35, Gradle 8.9. First build the watch using `gradle -p ../watch :app:testDebugUnitTest :app:assembleDebug`. Then run `python3 prepare_assets.py` and `gradle :app:assembleDebug`. GitHub Actions builds and verifies both APKs. Download the `ResoluteTimer-Phone-Watch-3.47` artifact and open `ResoluteTimer-Android-3.47.apk` on your phone. Allow installation from the specific browser/file app when Android prompts.
+Build: JDK 17, Android SDK 35, Gradle 8.9. First build the watch using `gradle -p ../watch :app:testDebugUnitTest :app:assembleDebug`. Then run `python3 prepare_assets.py` and `gradle :app:assembleDebug`. GitHub Actions builds and verifies both APKs. Download the `ResoluteTimer-Phone-Watch-3.48` artifact and open `ResoluteTimer-Android-3.48.apk` on your phone. Allow installation from the specific browser/file app when Android prompts.
 
 Version 3.19 adds four time slots (10 AM, 11 AM, noon, 1 PM). Edit lets you customize each slot's time and all four fields' team names. Main time-slot buttons select the corresponding names and scores. Slots are separate and persist locally; existing 3.16 field records are preserved in the first slot. Cancel discards unsaved edits; Reset restores every slot to defaults.
 
@@ -73,4 +73,6 @@ Version 3.46 makes the October 18 Sixes Showdown schedule the default: 41 games,
 
 Fields are naturally sorted by name (Field 1 through Field 5). The Team Filter section above Field lists team names alphabetically. Selecting a team filters available time slots and fields, retaining team IDs and scores. All Teams restores the full schedule. The selection persists locally and is cleared by Reset or import.
 
-Version 3.47 uses the supplied end_of_period_buzzer.mp3 clip when the Game Clock reaches zero. The original 2.82-second MP3 is bundled unchanged. Clock interaction preloads and decodes it for Web Audio playback, with media playback and existing synthesized fallback if loading fails. Penalty beeps and one-minute claps are unchanged. Includes the latest dropdown asterisks, transparent logo, hidden Sample Schedule, single-line result names, and clean team filter.
+Version 3.48 uses the supplied end_of_period_buzzer.mp3 clip when the Game Clock reaches zero. The original 2.82-second MP3 is bundled unchanged. Clock interaction preloads and decodes it for Web Audio playback, with media playback and existing synthesized fallback if loading fails. Penalty beeps and one-minute claps are unchanged. Includes the latest dropdown asterisks, transparent logo, hidden Sample Schedule, single-line result names, and clean team filter.
+
+Version 3.48 adds press-and-hold Game Clock adjustments: one second on tap, repeating after 400 ms and every 100 ms until release. Keyboard Enter/Space, cancellation, and backgrounding stop safely.
