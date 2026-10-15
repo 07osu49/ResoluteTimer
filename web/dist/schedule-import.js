@@ -125,9 +125,9 @@ function open(options){
  const status=node('p','',dialog);status.id='import-status';status.setAttribute('role','status');
  const textLabel=node('label','Review or correct the extracted CSV text',dialog),text=node('textarea',null,dialog);text.id='import-text';textLabel.htmlFor=text.id;text.rows=8;text.spellcheck=false;text.placeholder='Time,East,West,South\n10:00 AM,Team A v Team B,Team C v Team D,Training';
  node('p','Use AM/PM or 24-hour times. Photos may misread names or columns: check every row. Up to 100 time slots and ten fields.',dialog);
- const previewButton=node('button','Preview Schedule',dialog);previewButton.type='button';
+ const previewButton=node('button','Preview Schedule',dialog);previewButton.type='button';previewButton.className='import-secondary';
  const preview=node('div',null,dialog);preview.className='import-preview';
- const actions=node('div',null,dialog);actions.className='dialog-actions';const cancel=node('button','Cancel',actions),apply=node('button','Use Schedule',actions);cancel.type=apply.type='button';apply.disabled=true;
+ const actions=node('div',null,dialog);actions.className='dialog-actions';const cancel=node('button','Cancel',actions),apply=node('button','Use Schedule',actions);cancel.type=apply.type='button';cancel.className='import-secondary';apply.disabled=true;
  let draft=null,workbook=null,busy=false,confirming=false;
  function resetConfirmation(){confirming=false;apply.textContent='Use Schedule'}
  function busyState(value){busy=value;text.disabled=file.disabled=sheet.disabled=previewButton.disabled=cancel.disabled=value;if(value)apply.disabled=true}
