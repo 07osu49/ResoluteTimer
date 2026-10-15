@@ -7,11 +7,11 @@ phone,watch=map(Path,sys.argv[1:])
 with zipfile.ZipFile(phone) as archive:
     assert archive.read('assets/watch/ResoluteTimer-Watch-1.0.apk')==watch.read_bytes()
     html=archive.read('assets/web/index.html').decode()
-    assert 'Version 3.45 · Android' in html
+    assert 'Version 3.46 · Android' in html
     assert html.count("location.href='resolute-watch://save'")==1
     assert html.count("location.href='resolute-watch://help'")==1
     assert 'No timer sync.' in html
-    assert 'schedule-import.js?v=345' in html
+    assert 'schedule-import.js?v=346' in html
     assert 'Import schedule' in archive.read('assets/web/schedule-import.js').decode()
     assert 'Confirm Replace' in archive.read('assets/web/schedule-import.js').decode()
     assert '.pdf,application/pdf' in archive.read('assets/web/schedule-import.js').decode()
