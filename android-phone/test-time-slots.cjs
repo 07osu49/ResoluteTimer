@@ -52,7 +52,9 @@ l=setup(untouchedStore,true);assert.equal(l.run('schedule.length'),17);assert.eq
 const ten=I.parseRows([['Time',...Array.from({length:10},(_,i)=>'F'+i)],['10 AM',...Array(10).fill('A v B')]]);l.c.candidate=ten;l.run('applyImportedSchedule(candidate)');l=setup(untouchedStore,true);assert.equal(l.nodes.get('field').options.length,10);
 const html=fs.readFileSync(require('node:path').join(__dirname,'../web/dist/index.html'),'utf8');
 assert.match(source,/loadScheduleButton.textContent='Sample Schedule'/);assert.match(html,/<button id="reset-fields" type="button"/);
-assert.match(html,/width:44px;min-height:24px;height:24px/);
+assert.match(html,/width:44px;min-height:48px;height:48px/);
+assert.match(html,/font-size:28px;font-weight:700;text-shadow:none/);
+assert.match(html,/#sideline-preview \.penclock\{text-align:center;width:100%\}/);
 console.log('PASS: Sixes default has 41 games/17 slots/5 fields, correct names/times, empty-field guards, independent scores, swap, editor save/cancel, ten-field limit, full reset/reload, imports, legacy custom preservation/migration, unchanged-sample upgrade with backup, and one-time update link preserving later scores');
 
 const filterStore=new Map();let ft=setup(filterStore,true),fn=ft.nodes;
