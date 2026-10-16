@@ -157,7 +157,7 @@ function node(tag,text,parent){const n=document.createElement(tag);if(text!=null
 function open(options){
  if(dialog){dialog.showModal();return}
  dialog=node('dialog');dialog.id='import-dialog';dialog.setAttribute('aria-labelledby','import-title');document.getElementById('sideline-preview').append(dialog);
- const title=node('h2','Import schedule',dialog);title.id='import-title';
+ const title=node('h2','Import Schedule',dialog);title.id='import-title';
  node('p','Choose CSV, Excel (.xlsx/.xls), PDF (up to 20 pages), or a clear photo of a schedule table. Files are processed on this device.',dialog);
  const label=node('label','Schedule file',dialog),file=node('input',null,dialog);file.type='file';file.id='schedule-file';label.htmlFor=file.id;file.accept='.csv,.tsv,.xlsx,.xls,.pdf,application/pdf,image/*';
  const sheetLabel=node('label','Excel worksheet',dialog),sheet=node('select',null,dialog);sheet.id='import-sheet';sheetLabel.htmlFor=sheet.id;sheetLabel.hidden=sheet.hidden=true;
