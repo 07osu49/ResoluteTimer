@@ -130,4 +130,28 @@ $('#field').onchange=()=>{saveField();field=Number($('#field').value);try{localS
 $('#send').onclick=()=>{const phone=$('#phone').value.replace(/[\s().-]/g,'');if(!/^\+?\d{7,15}$/.test(phone)){$('#note').textContent='Enter a valid phone number.';$('#phone').focus();return}location.href='sms:'+phone+'&body='+encodeURIComponent(message());$('#note').textContent='Review and send in Messages.'};
 advance();render();setInterval(()=>{advance(true);render()},100);setInterval(save,1000);document.addEventListener('visibilitychange',()=>{advance();save();if(document.visibilityState==='visible'&&state.running)unlock()});window.addEventListener('pagehide',save);if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#install').hidden=true;
 if(document.modelContext?.registerTool){try{document.modelContext.registerTool({name:'read_timer_state',description:'Read the game and penalty clocks.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute(){advance();render();return{period:state.period,periods:state.periods,gameSeconds:Math.ceil(state.remain),running:state.running,penalties:state.p.map((p,i)=>({seconds:Math.ceil(p),enabled:state.armed[i]}))}}})}catch(e){}}
+const appTabNames=['setup','timers','scores'];
+function selectAppTab(name,focus=false){
+  if(!appTabNames.includes(name))return;
+  stopClockAdjustment();
+  for(const key of appTabNames){
+    const active=key===name,button=$('#tab-'+key),panel=$('#view-'+key);
+    button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;panel.hidden=!active;
+  }
+  if(focus)$('#tab-'+name).focus();
+}
+for(const[name,index]of appTabNames.map((name,index)=>[name,index])){
+  const button=$('#tab-'+name);
+  button.onclick=()=>selectAppTab(name);
+  button.onkeydown=e=>{
+    let next;
+    if(e.key==='ArrowRight')next=(index+1)%appTabNames.length;
+    else if(e.key==='ArrowLeft')next=(index+appTabNames.length-1)%appTabNames.length;
+    else if(e.key==='Home')next=0;
+    else if(e.key==='End')next=appTabNames.length-1;
+    else return;
+    e.preventDefault();selectAppTab(appTabNames[next],true);
+  };
+}
+selectAppTab('setup');
 })();
