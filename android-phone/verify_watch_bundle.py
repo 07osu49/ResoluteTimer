@@ -14,7 +14,7 @@ with zipfile.ZipFile(phone) as archive:
     assert html.count("location.href='resolute-watch://help'")==1
     assert 'No timer sync.' in html
     assert 'schedule-import.js?v=361' in html
-    assert 'Import schedule' in archive.read('assets/web/schedule-import.js').decode()
+    assert 'Import Schedule' in archive.read('assets/web/schedule-import.js').decode()
     assert 'Confirm Replace' in archive.read('assets/web/schedule-import.js').decode()
     assert '.pdf,application/pdf' in archive.read('assets/web/schedule-import.js').decode()
     assert archive.getinfo('assets/web/vendor/pdfjs/pdf.min.mjs').file_size>100000
