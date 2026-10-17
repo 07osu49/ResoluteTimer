@@ -1,7 +1,7 @@
 import {divisions,roster,standings,winner,placeholder,key} from '/results-core.mjs';
 import {placementGames,bracketGroups,bracketParticipant} from '/results-brackets.mjs';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let data=null,division='all',search='',currentGame=null,loading=false,refreshRevision=0,view=location.hash==='#brackets'?'brackets':'standings';
+let data=null,division='all',search='',currentGame=null,loading=false,refreshRevision=0,view=location.hash==='#brackets'?'brackets':'standings',teamChoices='';
 const time=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')};
 const ordinal=n=>n+((n%100>=11&&n%100<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
 const stamp=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
@@ -13,7 +13,7 @@ function bracketCard(game){
  return '<article class="bracket-card"><div class="bracket-card-head"><strong>'+esc(game.code)+'</strong><span>'+time(game.time)+' · Field '+game.field+'</span></div>'+[a,b].map((team,i)=>'<div class="bracket-team '+(w===team?'bracket-winner':'')+'"><div><strong>'+esc(team)+'</strong>'+(team!==game['team'+(i+1)]?'<small>'+esc(game['team'+(i+1)])+'</small>':'')+'</div><b>'+(r?r['score'+(i+1)]:'—')+'</b></div>').join('')+'<div class="bracket-card-foot"><span>'+(r?w==='Tie'?'Tie · Winner Pending':'Final':placeholder(a)||placeholder(b)?'Teams Pending':'Ready to Play')+'</span><button class="mini" type="button" data-game="'+esc(game.id)+'">'+(r?'Correct':'Record')+'</button></div></article>';
 }
 function renderBrackets(ds){
- const match=game=>!search||[game.team1,game.team2,bracketParticipant(data.games,data.results,game,1),bracketParticipant(data.games,data.results,game,2)].some(t=>key(t).includes(key(search)));
+ const match=game=>!search||[game.team1,game.team2,bracketParticipant(data.games,data.results,game,1),bracketParticipant(data.games,data.results,game,2)].some(t=>key(t)===key(search));
  return ds.map(d=>{
   const games=placementGames(data.games,d);if(!games.length)return'';
   const groups=bracketGroups(data.games,d),paths=groups.paths.filter(p=>p.nodes.some(n=>match(n.game))),singles=groups.singles.filter(match);
@@ -27,6 +27,10 @@ function renderBrackets(ds){
 }
 
 function render(){
+ const names=[...new Set(divisions.flatMap(d=>roster(data.games,d)))].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'}));
+ const choices='<option value="">All Teams</option>'+names.map(team=>'<option value="'+esc(team)+'">'+esc(team)+'</option>').join('');
+ if(choices!==teamChoices){$('#search').innerHTML=choices;teamChoices=choices}
+ $('#search').value=search;
  $('#header-brackets').setAttribute('aria-pressed',String(view==='brackets'));
  for(const name of['standings','brackets'])$('#view-'+name).setAttribute('aria-pressed',String(view===name));
  $('#standings-note').hidden=view==='brackets';$('#brackets-note').hidden=view!=='brackets';
@@ -37,7 +41,7 @@ function render(){
  const ds=divisions.filter(d=>division==='all'||division===d);
  $('#content').innerHTML=view==='brackets'?renderBrackets(ds):ds.map(d=>{
   const all=data.games.filter(g=>g.division===d),reported=all.filter(g=>data.results[g.id]).length;
-  const match=t=>!search||key(t).includes(key(search));
+  const match=t=>!search||key(t)===key(search);
   const teams=standings(data.games,data.results,d).map((t,i)=>({...t,place:i+1})).filter(t=>match(t.team));
   const games=all.filter(g=>{const r=data.results[g.id];return match(r?.team1||g.team1)||match(r?.team2||g.team2)});
   if(!teams.length&&!games.length)return'';
@@ -57,7 +61,7 @@ function openReport(id){
 }
 $('#report-form').onsubmit=async e=>{e.preventDefault();const g=currentGame;if(!g)return;const payload={submissionId:crypto.randomUUID(),gameId:g.id,team1:$('#report-team1').value,team2:$('#report-team2').value,score1:Number($('#report-score1').value),score2:Number($('#report-score2').value),source:'results'};$('#save-report').disabled=true;
  try{const r=await fetch('/api/results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json();if(!r.ok)throw Error(d.error||'Unable to save result');$('#report-dialog').close();await refresh()}catch(e){$('#report-error').textContent=e.message;$('#report-error').className='error'}finally{$('#save-report').disabled=false}};
-$('#cancel-report').onclick=()=>$('#report-dialog').close();$('#refresh').onclick=()=>{window.ResoluteResultsLink?.flush();refresh()};$('#search').oninput=e=>{search=e.target.value;if(data)render()};
+$('#cancel-report').onclick=()=>$('#report-dialog').close();$('#refresh').onclick=()=>{window.ResoluteResultsLink?.flush();refresh()};$('#search').onchange=e=>{search=e.target.value;if(data)render()};
 $('#export').onclick=()=>{if(!data)return;const rows=[['Division','Game','Field','Time','Team 1','Score 1','Team 2','Score 2','Winner','Reported At']];for(const g of data.games){const r=data.results[g.id];if(r)rows.push([g.division,g.code,g.field,time(g.time),r.team1,r.score1,r.team2,r.score2,winner(r),r.recordedAt])}const csv=rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='Sixes-Showdown-Results-2026-10-18.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('#reset-results').onclick=()=>{$('#reset-error').textContent='';$('#reset-dialog').showModal()};
 $('#cancel-reset').onclick=()=>$('#reset-dialog').close();
