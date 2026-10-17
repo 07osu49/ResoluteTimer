@@ -22,11 +22,13 @@ assert.ok(normalizeReport({...report,gameId:bracket.id,team1:teams[0],team2:team
 assert.throws(()=>normalizeReport({...report,gameId:bracket.id,team1:teams[0],team2:teams[0]},games));
 // Exercise the actual browser outbox against a lost connection, then retry.
 const storage=new Map(),events={};let online=false,calls=[];
-const context={localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},window:{addEventListener:(n,f)=>events[n]=f,dispatchEvent:()=>{}},document:{hidden:false,addEventListener:()=>{}},CustomEvent:class{},AbortController,setTimeout,clearTimeout,setInterval:()=>{},crypto:{randomUUID:()=> 'test-report-0002'},fetch:async(url,opts)=>{calls.push(JSON.parse(opts.body));if(!online)throw Error('Offline');return{ok:true,json:async()=>({saved:true})}}};
+const context={localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},window:{addEventListener:(n,f)=>events[n]=f,dispatchEvent:()=>{}},document:{hidden:false,addEventListener:()=>{}},CustomEvent:class{},AbortController,setTimeout,clearTimeout,setInterval:()=>{},crypto:{randomUUID:()=> 'test-report-0002'},fetch:async(url,opts)=>{calls.push(JSON.parse(opts.body));if(!online)throw Error('Offline');return{ok:true,json:async()=>({saved:true})}}};
 vm.runInNewContext(readFileSync(new URL('../public/results-sync.js',import.meta.url),'utf8'),context);
 const link=context.window.ResoluteResultsLink;await link.flush();link.record(report);await link.flush();
 assert.equal(link.status().pending,1);assert.match(link.status().error,/Offline/);
 online=true;await link.flush();assert.equal(link.status().pending,0);assert.ok(link.status().lastSynced);
 assert.ok(calls.every(p=>!('phone'in p)));assert.equal(calls[0].submissionId,calls[1].submissionId);
 assert.throws(()=>link.record({...report,score1:-5}));
+await link.pause();const callsBefore=calls.length;link.record(report);await link.flush();assert.equal(calls.length,callsBefore);assert.equal(link.status().pending,1);
+link.clearPending();link.resume();await link.flush();assert.equal(link.status().pending,0);assert.equal(calls.length,callsBefore);
 console.log('PASS: 41 scheduled games, 28 teams, divisions, win/tie standings, corrections, reversed sides, bracket validation and offline idempotent outbox.');

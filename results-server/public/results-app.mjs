@@ -1,10 +1,10 @@
 import {divisions,roster,standings,winner,placeholder,key} from '/results-core.mjs';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let data=null,division='all',search='',currentGame=null,loading=false;
+let data=null,division='all',search='',currentGame=null,loading=false,refreshRevision=0;
 const time=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')};
 const stamp=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 function showOutbox(){const s=window.ResoluteResultsLink?.status();$('#outbox-status').textContent=s?.pending?s.pending+' report(s) waiting to sync on this device.'+(s.error?' '+s.error:''):''}
-async function refresh(){if(loading)return;loading=true;try{const r=await fetch('/api/results',{cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Unable to load results');data=d;render();$('#global-status').textContent='Shared results · Updated '+stamp(d.updatedAt);$('#global-status').className='';}catch(e){$('#global-status').textContent=e.message+(data?' · Showing last loaded results.':'');$('#global-status').className='offline';if(!data)$('#content').innerHTML='<div class="error">Results are unavailable. Select Refresh to retry.</div>'}finally{loading=false;showOutbox()}}
+async function refresh(){if(loading)return;loading=true;const revision=refreshRevision;try{const r=await fetch('/api/results',{cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Unable to load results');if(revision!==refreshRevision)return;data=d;render();$('#global-status').textContent='Shared results · Updated '+stamp(d.updatedAt);$('#global-status').className='';}catch(e){$('#global-status').textContent=e.message+(data?' · Showing last loaded results.':'');$('#global-status').className='offline';if(!data)$('#content').innerHTML='<div class="error">Results are unavailable. Select Refresh to retry.</div>'}finally{loading=false;showOutbox()}}
 function render(){
  $('#stat-games').textContent=data.games.length;$('#stat-results').textContent=Object.keys(data.results).length;
  $('#stat-teams').textContent=divisions.reduce((n,d)=>n+roster(data.games,d).length,0);
@@ -35,5 +35,18 @@ $('#report-form').onsubmit=async e=>{e.preventDefault();const g=currentGame;if(!
  try{const r=await fetch('/api/results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json();if(!r.ok)throw Error(d.error||'Unable to save result');$('#report-dialog').close();await refresh()}catch(e){$('#report-error').textContent=e.message;$('#report-error').className='error'}finally{$('#save-report').disabled=false}};
 $('#cancel-report').onclick=()=>$('#report-dialog').close();$('#refresh').onclick=()=>{window.ResoluteResultsLink?.flush();refresh()};$('#search').oninput=e=>{search=e.target.value;if(data)render()};
 $('#export').onclick=()=>{if(!data)return;const rows=[['Division','Game','Field','Time','Team 1','Score 1','Team 2','Score 2','Winner','Reported At']];for(const g of data.games){const r=data.results[g.id];if(r)rows.push([g.division,g.code,g.field,time(g.time),r.team1,r.score1,r.team2,r.score2,winner(r),r.recordedAt])}const csv=rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='Sixes-Showdown-Results-2026-10-18.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+$('#reset-results').onclick=()=>{$('#reset-error').textContent='';$('#reset-dialog').showModal()};
+$('#cancel-reset').onclick=()=>$('#reset-dialog').close();
+$('#reset-form').onsubmit=async e=>{
+ e.preventDefault();const button=$('#confirm-reset');button.disabled=true;$('#cancel-reset').disabled=true;$('#reset-dialog').dataset.busy='true';
+ try{
+  await window.ResoluteResultsLink?.pause();
+  const response=await fetch('/api/results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reset',confirmation:'RESET ALL SCORES'})});
+  const result=await response.json();if(!response.ok||!result.reset)throw Error(result.error||'Unable to reset scores.');
+  refreshRevision++;if(data){data.results={};data.history=[];render()}window.ResoluteResultsLink?.clearPending();$('#reset-dialog').close();await refresh();
+ }catch(error){$('#reset-error').textContent=error.message;$('#reset-error').className='error'}
+ finally{window.ResoluteResultsLink?.resume();button.disabled=false;$('#cancel-reset').disabled=false;delete $('#reset-dialog').dataset.busy}
+};
+$('#reset-dialog').addEventListener('cancel',e=>{if($('#reset-dialog').dataset.busy)e.preventDefault()});
 window.addEventListener('resolute-results-sync',()=>{showOutbox();refresh()});window.addEventListener('online',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});setInterval(()=>{if(!document.hidden)refresh()},15000);refresh();
 

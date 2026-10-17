@@ -17,4 +17,14 @@ assert.equal((await handleResults(post({...payload,score1:-1}),{DB})).status,400
 assert.equal((await handleResults(post(payload,'https://other.test'),{DB})).status,403);assert.equal(writes,1);
 assert.equal((await handleResults(new Request('https://example.test/api/results',{method:'OPTIONS',headers:{Origin:'https://appassets.androidplatform.net'}}),{DB})).status,204);
 assert.equal((await handleResults(new Request('https://example.test/api/results'),{})).status,503);
+assert.equal((await handleResults(post({action:'reset'},'https://resolute-sideline.truecoot2.chatgpt.site'),{DB})).status,400);assert.equal(writes,1);
+assert.equal((await handleResults(post({action:'reset',confirmation:'RESET ALL SCORES'},'https://other.test'),{DB})).status,403);assert.equal(writes,1);
+let resetQueries=[];
+const resetDB={prepare:sql=>({sql}),batch:async batch=>{resetQueries=batch.map(q=>q.sql)}};
+response=await handleResults(post({action:'reset',confirmation:'RESET ALL SCORES'},'https://resolute-sideline.truecoot2.chatgpt.site'),{DB:resetDB});
+assert.equal(response.status,200);assert.equal((await response.json()).reset,true);assert.deepEqual(resetQueries,['DELETE FROM game_results','DELETE FROM report_history']);
+const oldError=console.error;console.error=()=>{};
+response=await handleResults(post({action:'reset',confirmation:'RESET ALL SCORES'},'https://resolute-sideline.truecoot2.chatgpt.site'),{DB:{...resetDB,batch:async()=>{throw Error('Database unavailable')}}});
+console.error=oldError;assert.equal(response.status,503);
+console.log('PASS: reset requires explicit confirmation and correct origin; clears scores/history in one transaction and reports storage failures.');
 console.log('PASS: API schedule/read, validated transactional POST, Android CORS, rejected invalid requests and missing storage.');

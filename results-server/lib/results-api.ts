@@ -20,7 +20,14 @@ export async function handleResults(request:Request,env:{DB:D1Database}){
   if(origin&&!allowedOrigins.has(origin))return json({error:'This origin cannot report results.'},403);
   if(!(request.headers.get('Content-Type')||'').includes('application/json'))return json({error:'JSON score report required.'},415);
   const raw=await request.text();if(raw.length>6000)return json({error:'Report is too large.'},413);
-  let report;try{report=normalizeReport(JSON.parse(raw),schedule.games)}catch(e:any){return json({error:e.message},400)}
+  let payload;try{payload=JSON.parse(raw)}catch{return json({error:'Invalid JSON report.'},400)}
+  if(payload?.action==='reset'){
+   if(origin!=='https://resolute-sideline.truecoot2.chatgpt.site')return json({error:'Open the Results app to reset scores.'},403);
+   if(payload.confirmation!=='RESET ALL SCORES')return json({error:'Reset confirmation is required.'},400);
+   await env.DB.batch([env.DB.prepare('DELETE FROM game_results'),env.DB.prepare('DELETE FROM report_history')]);
+   return json({reset:true});
+  }
+  let report;try{report=normalizeReport(payload,schedule.games)}catch(e:any){return json({error:e.message},400)}
   const at=new Date().toISOString(),r=report;
   await env.DB.batch([env.DB.prepare(historySql).bind(r.submissionId,r.gameId,r.team1,r.team2,r.score1,r.score2,r.source,at),env.DB.prepare(resultSql).bind(r.submissionId)]);
   return json({saved:true,gameId:r.gameId,recordedAt:at});
