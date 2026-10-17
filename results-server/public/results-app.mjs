@@ -1,7 +1,7 @@
 import {divisions,roster,standings,winner,placeholder,key} from '/results-core.mjs';
 import {placementGames,bracketGroups,bracketParticipant} from '/results-brackets.mjs';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let data=null,division='all',search='',currentGame=null,loading=false,refreshRevision=0,view=location.hash==='#brackets'?'brackets':'standings',teamChoices='';
+let data=null,division='all',search='',currentGame=null,loading=false,refreshRevision=0,view=location.hash==='#unsubmitted'?'unsubmitted':location.hash==='#brackets'?'brackets':'standings',teamChoices='';
 const time=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')};
 const ordinal=n=>n+((n%100>=11&&n%100<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
 const stamp=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
@@ -26,20 +26,36 @@ function renderBrackets(ds){
  }).join('')||'<div class="empty">No placement games match this division or team.</div>';
 }
 
+
+function renderUnsubmitted(ds){
+ const total=data.games.filter(g=>!data.results[g.id]).length;
+ const sections=ds.map(d=>{
+  const games=data.games.filter(g=>g.division===d&&!data.results[g.id]&&(!search||[bracketParticipant(data.games,data.results,g,1),bracketParticipant(data.games,data.results,g,2)].some(t=>key(t)===key(search))));
+  if(!games.length)return'';
+  return '<section class="division"><div class="division-head"><h2>'+esc(d)+'</h2><span class="muted">'+games.length+' Unsubmitted</span></div><div class="table-wrap"><table class="games"><thead><tr><th>Time / Field</th><th>Teams</th><th>Status</th><th></th></tr></thead><tbody>'+games.map(g=>{
+   const a=bracketParticipant(data.games,data.results,g,1),b=bracketParticipant(data.games,data.results,g,2);
+   return '<tr><td>'+time(g.time)+'<br><span class="muted">Field '+g.field+' · '+esc(g.code)+'</span></td><td><span class="match-team">'+esc(a)+'</span><span class="match-team">'+esc(b)+'</span></td><td><span class="pill pending">Not Submitted</span>'+((placeholder(a)||placeholder(b))?'<div class="legend">Teams Pending</div>':'')+'</td><td><button class="mini" type="button" data-game="'+esc(g.id)+'">Record Result</button></td></tr>';
+  }).join('')+'</tbody></table></div></section>';
+ }).join('');
+ return '<div class="unsubmitted-title"><h2>Unsubmitted Game Results</h2><p class="muted">'+total+' of '+data.games.length+' scheduled games have no submitted score.</p></div>'+(sections||'<div class="empty">'+(total?'No unsubmitted games match these filters.':'All game results have been submitted.')+'</div>');
+}
+
 function render(){
  const names=[...new Set(divisions.flatMap(d=>roster(data.games,d)))].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'}));
  const choices='<option value="">All Teams</option>'+names.map(team=>'<option value="'+esc(team)+'">'+esc(team)+'</option>').join('');
  if(choices!==teamChoices){$('#search').innerHTML=choices;teamChoices=choices}
  $('#search').value=search;
  $('#header-brackets').setAttribute('aria-pressed',String(view==='brackets'));
- for(const name of['standings','brackets'])$('#view-'+name).setAttribute('aria-pressed',String(view===name));
- $('#standings-note').hidden=view==='brackets';$('#brackets-note').hidden=view!=='brackets';
+ for(const name of['standings','brackets','unsubmitted'])$('#view-'+name).setAttribute('aria-pressed',String(view===name));
+ $('#standings-note').hidden=view!=='standings';$('#brackets-note').hidden=view!=='brackets';$('#unsubmitted-note').hidden=view!=='unsubmitted';
+ $('#show-unsubmitted').setAttribute('aria-pressed',String(view==='unsubmitted'));
+ $('#stat-unsubmitted').textContent='View '+data.games.filter(g=>!data.results[g.id]).length+' Unsubmitted';
  $('#stat-games').textContent=data.games.length;$('#stat-results').textContent=Object.keys(data.results).length;
  $('#stat-teams').textContent=divisions.reduce((n,d)=>n+roster(data.games,d).length,0);
  $('#division-tabs').innerHTML=[['all','All Divisions'],...divisions.map(d=>[d,d])].map(([id,label])=>'<button type="button" data-division="'+esc(id)+'" aria-pressed="'+(division===id)+'">'+esc(label)+'</button>').join('');
  for(const b of $('#division-tabs').querySelectorAll('button'))b.onclick=()=>{division=b.dataset.division;render()};
  const ds=divisions.filter(d=>division==='all'||division===d);
- $('#content').innerHTML=view==='brackets'?renderBrackets(ds):ds.map(d=>{
+ $('#content').innerHTML=view==='brackets'?renderBrackets(ds):view==='unsubmitted'?renderUnsubmitted(ds):ds.map(d=>{
   const all=data.games.filter(g=>g.division===d),reported=all.filter(g=>data.results[g.id]).length;
   const match=t=>!search||key(t)===key(search);
   const teams=standings(data.games,data.results,d).map((t,i)=>({...t,place:i+1})).filter(t=>match(t.team));
@@ -76,7 +92,8 @@ $('#reset-form').onsubmit=async e=>{
  finally{window.ResoluteResultsLink?.resume();button.disabled=false;$('#cancel-reset').disabled=false;delete $('#reset-dialog').dataset.busy}
 };
 $('#reset-dialog').addEventListener('cancel',e=>{if($('#reset-dialog').dataset.busy)e.preventDefault()});
-for(const name of['standings','brackets'])$('#view-'+name).onclick=()=>{view=name;history.replaceState(null,'',name==='brackets'?'#brackets':location.pathname);if(data)render()};
+for(const name of['standings','brackets','unsubmitted'])$('#view-'+name).onclick=()=>{view=name;history.replaceState(null,'',name==='standings'?location.pathname:'#'+name);if(data)render()};
 $('#header-brackets').onclick=()=>$('#view-brackets').click();
+$('#show-unsubmitted').onclick=()=>{division='all';search='';view='unsubmitted';history.replaceState(null,'','#unsubmitted');if(data)render()};
 window.addEventListener('resolute-results-sync',()=>{showOutbox();refresh()});window.addEventListener('online',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});setInterval(()=>{if(!document.hidden)refresh()},15000);refresh();
 
