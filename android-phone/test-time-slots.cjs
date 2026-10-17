@@ -82,3 +82,10 @@ assert.equal(nb.get('field-number-buttons').children[0].disabled,true);
 nb.get('field-number-buttons').children[3].onclick();assert.equal(numberTest.run('field'),4);assert.equal(numberTest.run('schedule[slot].time'),'12:40');
 numberTest.run("teamFilter='';loadField()");nb.get('edit-fields').onclick();nb.get('add-field').onclick();nb.get('edit-form').onsubmit({preventDefault(){}});assert.equal(nb.get('field-number-buttons').children.length,6);
 console.log('PASS: field number buttons, selected state, dropdown sync, team-filter availability and matching slot, added field');
+
+const schoolBreak=setup(new Map(),true);
+assert.equal(schoolBreak.run("scoreVenueLines(fieldName(2))"),'Olentangy Liberty High School\n- Field 2');
+assert.match(schoolBreak.nodes.get('score-heading').textContent,/School\n- Field 2/);
+assert.equal(schoolBreak.run("scoreVenueLines('Field 2')"),'Field 2');
+assert.match(schoolBreak.run('message()'),/School - Field 2/);
+console.log('PASS: score venue line break after School, other fields and underlying SMS unchanged');
