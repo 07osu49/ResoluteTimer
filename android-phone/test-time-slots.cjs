@@ -72,3 +72,13 @@ console.log('PASS: alphabetical unique team list, All Teams, filtered times/fiel
 const hiddenStore=new Map([['resolute-team-filter','BLACK 1st Place']]);const hidden=setup(hiddenStore,true);const visible=hidden.nodes.get('team-filter').options.map(o=>o.textContent);assert(!visible.some(n=>n.startsWith('BLACK ')||n.startsWith('RED ')));assert(visible.includes('House Team Red'));assert.equal(hidden.nodes.get('team-filter').value,'');assert.equal(hidden.run('schedule.flatMap(s=>s.fields).filter(f=>!f.activity).length'),41);assert.equal(hidden.run("schedule.some(s=>s.fields.some(f=>f.team1==='BLACK 1st Place'))"),true);console.log('PASS: BLACK/RED bracket placeholders hidden from filter; House Team Red and all 41 games retained; obsolete saved filter cleared');
 
 const bracket=setup(new Map([['resolute-team-filter','Bracket Winner B5']]),true);const bracketNames=bracket.nodes.get('team-filter').options.map(o=>o.textContent);assert(!bracketNames.some(n=>n.toLowerCase().startsWith('bracket winner')));assert(bracketNames.includes('House Team Red'));assert.equal(bracket.nodes.get('team-filter').value,'');assert.equal(bracket.run("schedule.some(s=>s.fields.some(f=>f.team1==='Bracket Winner B5'))"),true);assert.equal(bracket.run('schedule.flatMap(s=>s.fields).filter(f=>!f.activity).length'),41);console.log('PASS: Bracket Winner entries hidden from filter, old selection cleared, all games retained');
+
+const numberTest=setup(new Map(),true),nb=numberTest.nodes;
+assert.deepEqual(nb.get('field-number-buttons').children.map(b=>b.textContent),['1','2','3','4','5']);
+nb.get('field-number-buttons').children[3].onclick();assert.equal(numberTest.run('field'),4);assert.equal(nb.get('field').value,'4');assert.equal(nb.get('field-number-buttons').children[3]['aria-pressed'],'true');
+nb.get('field').value='2';numberTest.run("field=2;loadField()");assert.equal(nb.get('field-number-buttons').children[1]['aria-pressed'],'true');
+nb.get('team-filter').value='Dublin Jerome';nb.get('team-filter').onchange();
+assert.equal(nb.get('field-number-buttons').children[0].disabled,true);
+nb.get('field-number-buttons').children[3].onclick();assert.equal(numberTest.run('field'),4);assert.equal(numberTest.run('schedule[slot].time'),'12:40');
+numberTest.run("teamFilter='';loadField()");nb.get('edit-fields').onclick();nb.get('add-field').onclick();nb.get('edit-form').onsubmit({preventDefault(){}});assert.equal(nb.get('field-number-buttons').children.length,6);
+console.log('PASS: field number buttons, selected state, dropdown sync, team-filter availability and matching slot, added field');
