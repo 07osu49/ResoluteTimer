@@ -29,7 +29,7 @@ assert.equal(t.run('schedule.flatMap(s=>s.fields).filter(f=>!f.activity).length'
 assert.equal(t.run('schedule[0].fields[0].activity'),true);assert.equal(t.run('schedule[0].fields[4].team1'),'House Team Red');
 assert.equal(t.run('schedule[1].fields[0].team1'),'St. Francis De Sales (Tol)');
 assert.equal(t.run('schedule[16].fields[3].team2'),'BLACK 2nd Place');
-assert(n.get('field').options.every(o=>!o.textContent.includes('Olentangy Liberty High School -')));assert.equal(t.run('fieldName(2)'),'Olentangy Liberty High School - Field 2');assert.match(t.run('message()'),/Olentangy Liberty High School - Field 2/);
+assert(n.get('field').options.every(o=>!o.textContent.includes('Olentangy Liberty High School -')));assert.equal(t.run('fieldName(2)'),'Olentangy Liberty High School Field 2');assert.match(t.run('message()'),/Olentangy Liberty High School Field 2/);
 assert.equal(n.get('time-slots').children.length,17);assert.equal(n.get('field').options.length,5);
 n.get('score1-plus').onclick();assert.equal(n.get('score1').value,'1');assert.match(t.run('message()'),/Game Time: 8:40 AM/);
 const before=t.run('message()');n.get('switch-teams').onclick();assert.equal(t.run('message()'),before);
@@ -84,8 +84,8 @@ numberTest.run("teamFilter='';loadField()");nb.get('edit-fields').onclick();nb.g
 console.log('PASS: field number buttons, selected state, dropdown sync, team-filter availability and matching slot, added field');
 
 const schoolBreak=setup(new Map(),true);
-assert.equal(schoolBreak.run("scoreVenueLines(fieldName(2))"),'Olentangy Liberty High School\n- Field 2');
-assert.match(schoolBreak.nodes.get('score-heading').textContent,/School\n- Field 2/);
+assert.equal(schoolBreak.run("scoreVenueLines(fieldName(2))"),'Olentangy Liberty High School\nField 2');
+assert.match(schoolBreak.nodes.get('score-heading').textContent,/School\nField 2/);
 assert.equal(schoolBreak.run("scoreVenueLines('Field 2')"),'Field 2');
-assert.match(schoolBreak.run('message()'),/School - Field 2/);
-console.log('PASS: score venue line break after School, other fields and underlying SMS unchanged');
+assert.match(schoolBreak.run('message()'),/School Field 2/);
+console.log('PASS: score venue line break after School, dash removed before Field in headings and SMS');
