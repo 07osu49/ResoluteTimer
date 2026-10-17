@@ -1,4 +1,4 @@
-"""Bundle the 3.64 web timer and standalone watch APK in Android phone 3.64."""
+"""Bundle the 3.65 web timer and standalone watch APK in Android phone 3.65."""
 from pathlib import Path
 import shutil
 
@@ -7,9 +7,9 @@ source=root.parent/'web'/'dist'
 target=root/'app'/'src'/'main'/'assets'/'web'
 target.mkdir(parents=True,exist_ok=True)
 html=(source/'index.html').read_text()
-assert 'Version 3.64' in html and 'Game Clock 1 / 4' in html
+assert 'Version 3.65' in html and 'Game Clock 1 / 4' in html
 html=html.replace('Add to iPhone: Safari → Share → Add to Home Screen','Android app · Keep open during play for alerts.')
-html=html.replace('Version 3.64 · iPhone','Version 3.64 · Android')
+html=html.replace('Version 3.65 · iPhone','Version 3.65 · Android')
 watch_apk=root.parent/'watch'/'app'/'build'/'outputs'/'apk'/'debug'/'app-debug.apk'
 if not watch_apk.is_file():
     raise RuntimeError('Build the watch APK first: gradle -p ../watch :app:assembleDebug')
@@ -26,4 +26,4 @@ shutil.copytree(source/'vendor',target/'vendor',dirs_exist_ok=True)
 icons=root/'app'/'src'/'main'/'res'/'drawable'
 icons.mkdir(parents=True,exist_ok=True)
 shutil.copyfile(source/'icon.png',icons/'app_icon.png')
-print('Bundled Android 3.64 with Watch 1.0 APK')
+print('Bundled Android 3.65 with Watch 1.0 APK')
