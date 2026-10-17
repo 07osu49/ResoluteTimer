@@ -189,4 +189,5 @@ for(const[name,index]of appTabNames.map((name,index)=>[name,index])){
   };
 }
 selectAppTab('setup');
+if(typeof window!=='undefined'&&typeof window.finishSidelineSplash==='function')window.finishSidelineSplash();
 })();
