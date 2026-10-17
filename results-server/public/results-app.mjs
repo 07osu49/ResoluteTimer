@@ -1,18 +1,40 @@
 import {divisions,roster,standings,winner,placeholder,key} from '/results-core.mjs';
+import {placementGames,bracketGroups,bracketParticipant} from '/results-brackets.mjs';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let data=null,division='all',search='',currentGame=null,loading=false,refreshRevision=0;
+let data=null,division='all',search='',currentGame=null,loading=false,refreshRevision=0,view=location.hash==='#brackets'?'brackets':'standings';
 const time=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')};
 const ordinal=n=>n+((n%100>=11&&n%100<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
 const stamp=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 function showOutbox(){const s=window.ResoluteResultsLink?.status();$('#outbox-status').textContent=s?.pending?s.pending+' report(s) waiting to sync on this device.'+(s.error?' '+s.error:''):''}
 async function refresh(){if(loading)return;loading=true;const revision=refreshRevision;try{const r=await fetch('/api/results',{cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Unable to load results');if(revision!==refreshRevision)return;data=d;render();$('#global-status').textContent='Shared results · Updated '+stamp(d.updatedAt);$('#global-status').className='';}catch(e){$('#global-status').textContent=e.message+(data?' · Showing last loaded results.':'');$('#global-status').className='offline';if(!data)$('#content').innerHTML='<div class="error">Results are unavailable. Select Refresh to retry.</div>'}finally{loading=false;showOutbox()}}
+
+function bracketCard(game){
+ const r=data.results[game.id],w=winner(r),a=bracketParticipant(data.games,data.results,game,1),b=bracketParticipant(data.games,data.results,game,2);
+ return '<article class="bracket-card"><div class="bracket-card-head"><strong>'+esc(game.code)+'</strong><span>'+time(game.time)+' · Field '+game.field+'</span></div>'+[a,b].map((team,i)=>'<div class="bracket-team '+(w===team?'bracket-winner':'')+'"><div><strong>'+esc(team)+'</strong>'+(team!==game['team'+(i+1)]?'<small>'+esc(game['team'+(i+1)])+'</small>':'')+'</div><b>'+(r?r['score'+(i+1)]:'—')+'</b></div>').join('')+'<div class="bracket-card-foot"><span>'+(r?w==='Tie'?'Tie · Winner Pending':'Final':placeholder(a)||placeholder(b)?'Teams Pending':'Ready to Play')+'</span><button class="mini" type="button" data-game="'+esc(game.id)+'">'+(r?'Correct':'Record')+'</button></div></article>';
+}
+function renderBrackets(ds){
+ const match=game=>!search||[game.team1,game.team2,bracketParticipant(data.games,data.results,game,1),bracketParticipant(data.games,data.results,game,2)].some(t=>key(t).includes(key(search)));
+ return ds.map(d=>{
+  const games=placementGames(data.games,d);if(!games.length)return'';
+  const groups=bracketGroups(data.games,d),paths=groups.paths.filter(p=>p.nodes.some(n=>match(n.game))),singles=groups.singles.filter(match);
+  if(!paths.length&&!singles.length)return'';
+  return '<section class="division"><div class="division-head"><h2>'+esc(d)+'</h2><span class="muted">'+games.length+' Placement / Bracket Games</span></div>'+paths.map(path=>{
+   const byId=new Map(path.nodes.map(n=>[n.game.id,n]));
+   const lines=path.edges.map(e=>{const a=byId.get(e.from),b=byId.get(e.to),x=a.x+270,y=a.y+90,end=b.y+(e.side===1?65:107),mid=x+30;return '<path d="M '+x+' '+y+' H '+mid+' V '+end+' H '+b.x+'"/>'}).join('');
+   return '<div class="bracket-scroll" role="region" aria-label="'+esc(d)+' winner progression" tabindex="0"><div class="bracket-board" style="width:'+path.width+'px;height:'+path.height+'px"><svg class="bracket-lines" width="'+path.width+'" height="'+path.height+'" aria-hidden="true">'+lines+'</svg>'+path.nodes.map(n=>'<div class="bracket-node" style="left:'+n.x+'px;top:'+n.y+'px">'+bracketCard(n.game)+'</div>').join('')+'</div></div>';
+  }).join('')+(singles.length?'<h3>Placement Matchups</h3><div class="placement-grid">'+singles.map(bracketCard).join('')+'</div>':'')+'</section>';
+ }).join('')||'<div class="empty">No placement games match this division or team.</div>';
+}
+
 function render(){
+ for(const name of['standings','brackets'])$('#view-'+name).setAttribute('aria-pressed',String(view===name));
+ $('#standings-note').hidden=view==='brackets';$('#brackets-note').hidden=view!=='brackets';
  $('#stat-games').textContent=data.games.length;$('#stat-results').textContent=Object.keys(data.results).length;
  $('#stat-teams').textContent=divisions.reduce((n,d)=>n+roster(data.games,d).length,0);
  $('#division-tabs').innerHTML=[['all','All Divisions'],...divisions.map(d=>[d,d])].map(([id,label])=>'<button type="button" data-division="'+esc(id)+'" aria-pressed="'+(division===id)+'">'+esc(label)+'</button>').join('');
  for(const b of $('#division-tabs').querySelectorAll('button'))b.onclick=()=>{division=b.dataset.division;render()};
  const ds=divisions.filter(d=>division==='all'||division===d);
- $('#content').innerHTML=ds.map(d=>{
+ $('#content').innerHTML=view==='brackets'?renderBrackets(ds):ds.map(d=>{
   const all=data.games.filter(g=>g.division===d),reported=all.filter(g=>data.results[g.id]).length;
   const match=t=>!search||key(t).includes(key(search));
   const teams=standings(data.games,data.results,d).map((t,i)=>({...t,place:i+1})).filter(t=>match(t.team));
@@ -29,7 +51,7 @@ function render(){
 function openReport(id){
  currentGame=data.games.find(g=>g.id===id);if(!currentGame)return;const g=currentGame,r=data.results[id];
  $('#report-title').textContent=r?'Correct Result':'Record Result';$('#report-description').textContent=g.division+' · '+time(g.time)+' · Field '+g.field;
- for(const side of[1,2]){const select=$('#report-team'+side),expected=g['team'+side];select.replaceChildren();if(placeholder(expected)){select.append(new Option('Select actual team…',''));for(const team of roster(data.games,g.division))select.append(new Option(team,team));select.value=r?.['team'+side]||'';}else{select.append(new Option(expected,expected));select.value=expected;}$('#report-score'+side).value=r?String(r['score'+side]):''}
+ for(const side of[1,2]){const select=$('#report-team'+side),expected=g['team'+side];select.replaceChildren();if(placeholder(expected)){select.append(new Option('Select actual team…',''));for(const team of roster(data.games,g.division))select.append(new Option(team,team));const resolved=bracketParticipant(data.games,data.results,g,side);select.value=r?.['team'+side]||(!placeholder(resolved)?resolved:'');}else{select.append(new Option(expected,expected));select.value=expected;}$('#report-score'+side).value=r?String(r['score'+side]):''}
  $('#report-error').textContent='';$('#report-dialog').showModal();
 }
 $('#report-form').onsubmit=async e=>{e.preventDefault();const g=currentGame;if(!g)return;const payload={submissionId:crypto.randomUUID(),gameId:g.id,team1:$('#report-team1').value,team2:$('#report-team2').value,score1:Number($('#report-score1').value),score2:Number($('#report-score2').value),source:'results'};$('#save-report').disabled=true;
@@ -49,5 +71,6 @@ $('#reset-form').onsubmit=async e=>{
  finally{window.ResoluteResultsLink?.resume();button.disabled=false;$('#cancel-reset').disabled=false;delete $('#reset-dialog').dataset.busy}
 };
 $('#reset-dialog').addEventListener('cancel',e=>{if($('#reset-dialog').dataset.busy)e.preventDefault()});
+for(const name of['standings','brackets'])$('#view-'+name).onclick=()=>{view=name;history.replaceState(null,'',name==='brackets'?'#brackets':location.pathname);if(data)render()};
 window.addEventListener('resolute-results-sync',()=>{showOutbox();refresh()});window.addEventListener('online',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});setInterval(()=>{if(!document.hidden)refresh()},15000);refresh();
 

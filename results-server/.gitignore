@@ -58,4 +58,5 @@ next-env.d.ts
 /public/*
 !/public/results-core.mjs
 !/public/results-app.mjs
+!/public/results-brackets.mjs
 *.tsbuildinfo
