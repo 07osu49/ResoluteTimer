@@ -27,6 +27,7 @@ function renderBrackets(ds){
 }
 
 function render(){
+ $('#header-brackets').setAttribute('aria-pressed',String(view==='brackets'));
  for(const name of['standings','brackets'])$('#view-'+name).setAttribute('aria-pressed',String(view===name));
  $('#standings-note').hidden=view==='brackets';$('#brackets-note').hidden=view!=='brackets';
  $('#stat-games').textContent=data.games.length;$('#stat-results').textContent=Object.keys(data.results).length;
@@ -72,5 +73,6 @@ $('#reset-form').onsubmit=async e=>{
 };
 $('#reset-dialog').addEventListener('cancel',e=>{if($('#reset-dialog').dataset.busy)e.preventDefault()});
 for(const name of['standings','brackets'])$('#view-'+name).onclick=()=>{view=name;history.replaceState(null,'',name==='brackets'?'#brackets':location.pathname);if(data)render()};
+$('#header-brackets').onclick=()=>$('#view-brackets').click();
 window.addEventListener('resolute-results-sync',()=>{showOutbox();refresh()});window.addEventListener('online',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});setInterval(()=>{if(!document.hidden)refresh()},15000);refresh();
 
