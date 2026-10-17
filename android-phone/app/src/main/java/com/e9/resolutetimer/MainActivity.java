@@ -67,11 +67,12 @@ public final class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient(){
             @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest request){
                 Uri uri=request.getUrl();
+                if("https".equals(uri.getScheme())&&"resolute-sideline.truecoot2.chatgpt.site".equals(uri.getHost())&&"/api/results".equals(uri.getPath()))return null;
                 if(!"https".equals(uri.getScheme())||!HOST.equals(uri.getHost()))return missing();
                 String name=uri.getPath();
                 if(name==null||!name.startsWith("/assets/"))return missing();
                 name=name.substring(8);
-                if(!(name.startsWith("vendor/pdfjs/")&&!name.contains("..")&&name.indexOf(92)<0)&&!java.util.Arrays.asList("index.html","app.js","schedule-import.js","IMPORT-LICENSES.txt","horn.wav","end_of_period_buzzer.mp3","icon.png","e9-logo.jpg","resolute-logo-transparent.png","manifest.webmanifest","vendor/xlsx.full.min.js","vendor/tesseract.min.js","vendor/worker.min.js","vendor/tesseract-core-lstm.wasm.js","vendor/eng.traineddata","vendor/SHEETJS-LICENSE.txt","vendor/TESSERACT-LICENSE.txt","vendor/TESSERACT-CORE-LICENSE.txt").contains(name))return missing();
+                if(!(name.startsWith("vendor/pdfjs/")&&!name.contains("..")&&name.indexOf(92)<0)&&!java.util.Arrays.asList("index.html","app.js","results-sync.js","schedule-import.js","IMPORT-LICENSES.txt","horn.wav","end_of_period_buzzer.mp3","icon.png","e9-logo.jpg","resolute-logo-transparent.png","manifest.webmanifest","vendor/xlsx.full.min.js","vendor/tesseract.min.js","vendor/worker.min.js","vendor/tesseract-core-lstm.wasm.js","vendor/eng.traineddata","vendor/SHEETJS-LICENSE.txt","vendor/TESSERACT-LICENSE.txt","vendor/TESSERACT-CORE-LICENSE.txt").contains(name))return missing();
                 String mime=name.endsWith(".html")?"text/html":(name.endsWith(".js")||name.endsWith(".mjs"))?"application/javascript":name.endsWith(".wasm")?"application/wasm":name.endsWith(".mp3")?"audio/mpeg":name.endsWith(".wav")?"audio/wav":name.endsWith(".png")?"image/png":name.endsWith(".jpg")?"image/jpeg":name.endsWith(".webmanifest")?"application/manifest+json":"application/octet-stream";
                 try{return new WebResourceResponse(mime,"UTF-8",getAssets().open("web/"+name));}catch(IOException e){return missing();}
             }
@@ -88,6 +89,10 @@ public final class MainActivity extends Activity {
     private WebResourceResponse missing(){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
     private boolean navigate(Uri uri){
         if("https".equals(uri.getScheme())&&HOST.equals(uri.getHost()))return false;
+        if("https".equals(uri.getScheme())&&"resolute-sideline.truecoot2.chatgpt.site".equals(uri.getHost())&&"/results".equals(uri.getPath())){
+            try{startActivity(new Intent(Intent.ACTION_VIEW,uri));}catch(ActivityNotFoundException e){Toast.makeText(this,"Enable a browser to open Division Results.",Toast.LENGTH_LONG).show();}
+            return true;
+        }
         if("resolute-watch".equals(uri.getScheme())){
             if("save".equals(uri.getHost()))saveWatch();
             else if("help".equals(uri.getHost()))watchHelp();
